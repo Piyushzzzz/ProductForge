@@ -46,7 +46,7 @@
   select:-webkit-autofill:hover,
   select:-webkit-autofill:focus {
     -webkit-text-fill-color: #ffffff !important;
-    -webkit-box-shadow: 0 0 0px 1000px #0A0F1E inset !important;
+    -webkit-box-shadow: 0 0 0px 1000px rgba(15, 23, 42, 0.75) inset !important;
     transition: background-color 5000s ease-in-out 0s;
     caret-color: #ffffff !important;
   }
@@ -54,12 +54,12 @@
 
 /* ─── Scrollbar Utility Classes ─── */
 .scrollbar-none, .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .scrollbar-none::-webkit-scrollbar, .no-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari and Opera */
+  display: none;
 }
 
 /* ─── 3D Perspective & Preservation ─── */
@@ -75,43 +75,76 @@
   perspective: 1200px;
 }
 
-/* ─── Hyper-Glassmorphism 3D Containers ─── */
-.glass-panel, .glass-panel-3d {
-  background: rgba(13, 20, 38, 0.85);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+/* ─── Transparent Glassmorphic Login Card ─── */
+.glass-login-card {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+  border-radius: 24px !important;
   box-shadow: 
-    0 20px 50px rgba(0, 0, 0, 0.7),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+    0 20px 50px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(34, 211, 238, 0.15),
+    inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.glass-panel-3d:hover {
-  border-color: rgba(99, 102, 241, 0.4);
+.glass-login-card:hover {
+  border-color: rgba(255, 255, 255, 0.6) !important;
   box-shadow: 
-    0 30px 60px rgba(0, 0, 0, 0.8),
-    0 0 30px rgba(99, 102, 241, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    0 30px 60px rgba(0, 0, 0, 0.6),
+    0 0 40px rgba(34, 211, 238, 0.25),
+    inset 0 1px 1px rgba(255, 255, 255, 0.5) !important;
 }
 
-.glass-card-3d {
-  background: linear-gradient(135deg, rgba(23, 31, 56, 0.85) 0%, rgba(11, 16, 32, 0.9) 100%);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+/* ─── Transparent Glass Inputs ─── */
+.glass-input-transparent {
+  background: rgba(255, 255, 255, 0.10) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  color: #ffffff !important;
+  border-radius: 14px !important;
+  transition: all 0.3s ease !important;
 }
 
-.glass-card-3d:hover {
-  transform: translateY(-8px) rotateX(4deg) rotateY(-2deg);
-  border-color: rgba(34, 211, 238, 0.4);
-  box-shadow: 
-    0 25px 50px rgba(0, 0, 0, 0.8),
-    0 0 25px rgba(34, 211, 238, 0.3),
-    inset 0 1px 1px rgba(255, 255, 255, 0.3);
+.glass-input-transparent::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.glass-input-transparent:focus {
+  outline: none !important;
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-color: rgba(34, 211, 238, 0.8) !important;
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.4) !important;
+}
+
+/* ─── Translucent Glowing Button ─── */
+.glass-btn-glow {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.85) 0%, rgba(34, 211, 238, 0.85) 100%) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  color: #ffffff !important;
+  border-radius: 14px !important;
+  box-shadow: 0 0 25px rgba(34, 211, 238, 0.4) !important;
+  transition: all 0.3s ease !important;
+}
+
+.glass-btn-glow:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.95) 0%, rgba(34, 211, 238, 0.95) 100%) !important;
+  box-shadow: 0 0 35px rgba(34, 211, 238, 0.6), 0 0 15px rgba(255, 255, 255, 0.5) !important;
+  transform: translateY(-1px);
+}
+
+/* ─── General Glass Panel Fallback ─── */
+.glass-panel, .glass-panel-3d {
+  background: rgba(13, 20, 38, 0.65);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ─── Glowing Neons ─── */
@@ -143,9 +176,9 @@
   -webkit-text-fill-color: transparent;
 }
 
-/* ─── High Contrast Visible Inputs ─── */
+/* ─── High Contrast Inputs ─── */
 .glass-input, .glass-input-3d {
-  background-color: #0A0F1E !important;
+  background-color: rgba(10, 15, 30, 0.85) !important;
   color: #ffffff !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6) !important;
@@ -159,37 +192,25 @@
 .glass-input:focus, .glass-input-3d:focus {
   outline: none !important;
   border-color: #6366F1 !important;
-  background-color: #0E1528 !important;
-  box-shadow: 0 0 15px rgba(99, 102, 241, 0.4), inset 0 2px 4px rgba(0, 0, 0, 0.6) !important;
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.4) !important;
 }
 
-/* ─── Floating & Pulse Animations ─── */
+/* ─── Keyframes ─── */
 @keyframes float3D {
   0%, 100% {
-    transform: translateY(0px) rotateX(0deg) rotateY(0deg);
+    transform: translateY(0px);
   }
   50% {
-    transform: translateY(-12px) rotateX(3deg) rotateY(-3deg);
+    transform: translateY(-12px);
   }
 }
 
 @keyframes pulseGlow {
   0%, 100% {
     opacity: 0.4;
-    transform: scale(1);
   }
   50% {
     opacity: 0.85;
-    transform: scale(1.08);
-  }
-}
-
-@keyframes scanline {
-  0% {
-    transform: translateY(-100%);
-  }
-  100% {
-    transform: translateY(1000%);
   }
 }
 
@@ -199,8 +220,4 @@
 
 .animate-pulse-glow {
   animation: pulseGlow 4s ease-in-out infinite;
-}
-
-.animate-scanline {
-  animation: scanline 8s linear infinite;
 }
