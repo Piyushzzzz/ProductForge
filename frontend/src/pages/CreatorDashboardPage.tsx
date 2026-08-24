@@ -105,8 +105,8 @@ export const CreatorDashboardPage: React.FC = () => {
 
   return (
     <div className="relative min-h-screen">
-      {/* 3D WebGL Background */}
-      <Background3D />
+      {/* 3D WebGL Background — CREATOR Variant (Amber & Violet) */}
+      <Background3D variant="CREATOR" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20 space-y-10">
         
