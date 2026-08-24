@@ -57,11 +57,8 @@ graph TD
 
 | Team Member | Module Ownership | Key Responsibilities |
 | :--- | :--- | :--- |
-| **Team Member 1** | **M1: Auth & User Management** | JWT authentication, bcrypt password hashing, RBAC middleware, secure user profiles |
-| **Team Member 2** | **M2: Product Lifecycle & M3: Marketplace** | Product CRUD, status state-machine, pricing plans, search index & category filtering |
-| **Team Member 3** | **M4: Releases & M5: File Delivery** | Semantic versioning, changelogs, SHA-256 checksums, entitlement-verified asset streams |
-| **Team Member 4** | **M6: Orders & M7: Entitlements** | Sandbox checkout simulation, license key generator, customer library aggregation |
-| **Team Member 5** | **M8: Reviews, M9: Telemetry, M10: Notifications** | Verified-buyer review gating, creator telemetry dashboards, Socket.IO push broadcasts |
+| **Team Member 1** | **M1: Auth, M2: Lifecycle, M3: Marketplace, M4: Releases, M5: Files** | Authentication & RBAC, product lifecycle state machine (`DRAFT` $\rightarrow$ `PUBLISHED`), marketplace search/filter, SemVer release engineering, path-traversal protected binary asset delivery |
+| **Team Member 2** | **M6: Orders, M7: Entitlements, M8: Reviews, M9: Telemetry, M10: Notifications** | Sandbox checkout & order processing, cryptographic license key generator (`PF-XXXX-XXXX`), customer library aggregation, verified-buyer review gating, creator telemetry dashboards, Socket.IO real-time notifications |
 
 ---
 
