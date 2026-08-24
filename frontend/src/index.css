@@ -6,6 +6,44 @@
   body {
     @apply bg-[#060913] text-slate-100 font-sans antialiased overflow-x-hidden selection:bg-indigo-500 selection:text-white;
   }
+
+  /* ─── Global Sleek Cyber-Glass Scrollbar ─── */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(10, 15, 30, 0.6);
+    border-radius: 8px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.7), rgba(34, 211, 238, 0.7));
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #6366F1, #22D3EE);
+    box-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+  }
+
+  /* Firefox Scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(99, 102, 241, 0.6) rgba(10, 15, 30, 0.6);
+  }
+}
+
+/* ─── Scrollbar Utility Classes ─── */
+.scrollbar-none, .no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-none::-webkit-scrollbar, .no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
 }
 
 /* ─── 3D Perspective & Preservation ─── */

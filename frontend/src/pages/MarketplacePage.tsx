@@ -121,7 +121,7 @@ export const MarketplacePage: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 glass-panel-3d p-4 rounded-2xl border border-white/10">
             
             {/* Category Filter Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 scrollbar-none">
+            <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto py-1 scrollbar-none no-scrollbar">
               <button
                 type="button"
                 onClick={() => setSelectedCategory('')}
