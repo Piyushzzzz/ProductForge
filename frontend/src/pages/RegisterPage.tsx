@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.js';
 import { UserRole } from '../types/index.js';
-import { Layers, Lock, Mail, User, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Background3D } from '../components/Background3D.js';
+import { Layers, Lock, Mail, User, ArrowRight, Sparkles } from 'lucide-react';
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -40,10 +41,12 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
-      <div className="glass-panel w-full max-w-md rounded-3xl p-8 border border-white/10 shadow-2xl space-y-6 relative overflow-hidden">
+    <div className="relative min-h-[85vh] flex items-center justify-center px-4 py-12">
+      <Background3D variant="BUYER" />
+
+      <div className="relative z-10 glass-panel-3d w-full max-w-md rounded-3xl p-8 border border-white/15 shadow-2xl space-y-6 overflow-hidden">
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center mx-auto shadow-glow">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center mx-auto shadow-glow-indigo">
             <Layers className="w-6 h-6 text-white" />
           </div>
           <h2 className="text-2xl font-bold font-display text-white">Join ProductForge</h2>
@@ -59,15 +62,15 @@ export const RegisterPage: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           {/* Persona Role Selection */}
           <div>
-            <label className="text-slate-300 font-medium block mb-1.5">I want to:</label>
+            <label className="text-slate-200 font-semibold block mb-1.5">I want to:</label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setRole('CUSTOMER')}
                 className={`p-3 rounded-2xl text-left border transition-all ${
                   role === 'CUSTOMER'
-                    ? 'bg-indigo-950/70 border-indigo-500 shadow-glow'
-                    : 'bg-slate-900/60 border-white/5 hover:border-white/20 text-slate-400'
+                    ? 'bg-indigo-950/80 border-indigo-500 shadow-glow-indigo'
+                    : 'bg-slate-950/80 border-white/10 hover:border-white/20 text-slate-400'
                 }`}
               >
                 <span className="font-bold text-white block">🛍️ Buy Software</span>
@@ -79,8 +82,8 @@ export const RegisterPage: React.FC = () => {
                 onClick={() => setRole('CREATOR')}
                 className={`p-3 rounded-2xl text-left border transition-all ${
                   role === 'CREATOR'
-                    ? 'bg-indigo-950/70 border-indigo-500 shadow-glow'
-                    : 'bg-slate-900/60 border-white/5 hover:border-white/20 text-slate-400'
+                    ? 'bg-indigo-950/80 border-indigo-500 shadow-glow-indigo'
+                    : 'bg-slate-950/80 border-white/10 hover:border-white/20 text-slate-400'
                 }`}
               >
                 <span className="font-bold text-white block">👨‍💻 Sell & Publish</span>
@@ -90,45 +93,45 @@ export const RegisterPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="text-slate-300 font-medium block mb-1">Full Name</label>
+            <label className="text-slate-200 font-semibold block mb-1">Full Name</label>
             <div className="relative">
-              <User className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <User className="w-4 h-4 text-indigo-400 absolute left-3.5 top-1/2 -translate-y-1/2 z-10" />
               <input
                 type="text"
                 placeholder="Alex Rivera"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full pl-10 pr-3 py-3 rounded-xl glass-input text-white"
+                className="w-full pl-10 pr-3 py-3 rounded-xl glass-input-3d text-white font-medium"
                 required
               />
             </div>
           </div>
 
           <div>
-            <label className="text-slate-300 font-medium block mb-1">Email Address</label>
+            <label className="text-slate-200 font-semibold block mb-1">Email Address</label>
             <div className="relative">
-              <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Mail className="w-4 h-4 text-indigo-400 absolute left-3.5 top-1/2 -translate-y-1/2 z-10" />
               <input
                 type="email"
                 placeholder="name@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-3 py-3 rounded-xl glass-input text-white"
+                className="w-full pl-10 pr-3 py-3 rounded-xl glass-input-3d text-white font-medium"
                 required
               />
             </div>
           </div>
 
           <div>
-            <label className="text-slate-300 font-medium block mb-1">Password</label>
+            <label className="text-slate-200 font-semibold block mb-1">Password</label>
             <div className="relative">
-              <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Lock className="w-4 h-4 text-indigo-400 absolute left-3.5 top-1/2 -translate-y-1/2 z-10" />
               <input
                 type="password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-3 py-3 rounded-xl glass-input text-white"
+                className="w-full pl-10 pr-3 py-3 rounded-xl glass-input-3d text-white font-medium"
                 required
               />
             </div>
@@ -137,16 +140,15 @@ export const RegisterPage: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold shadow-glow transition-all flex items-center justify-center gap-2"
+            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 disabled:opacity-50 text-white font-bold text-xs shadow-glow-indigo transition-all flex items-center justify-center gap-2"
           >
-            {loading ? 'Creating Account...' : 'Register Account'}{' '}
-            <ArrowRight className="w-4 h-4" />
+            {loading ? 'Creating Account...' : 'Register Account'} <ArrowRight className="w-4 h-4" />
           </button>
         </form>
 
         <p className="text-center text-xs text-slate-400">
           Already registered?{' '}
-          <Link to="/login" className="text-indigo-400 hover:underline font-semibold">
+          <Link to="/login" className="text-cyan-400 hover:underline font-bold">
             Sign In
           </Link>
         </p>
