@@ -1,453 +1,346 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Product, PricingPlan, Review } from '../types/index.js';
+import React, { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { api } from '../services/api.js';
-import { useAuth } from '../context/AuthContext.js';
-import { CheckoutModal } from '../components/CheckoutModal.js';
+import { Product } from '../types/index.js';
 import { LifecycleBadge } from '../components/LifecycleBadge.js';
-import {
-  Star,
-  Download,
-  ExternalLink,
-  ShieldCheck,
-  CheckCircle,
-  Clock,
-  Sparkles,
-  GitBranch,
-  FileCode,
-  MessageSquare,
-  ArrowLeft,
-  Key
+import { CheckoutModal } from '../components/CheckoutModal.js';
+import { Background3D } from '../components/Background3D.js';
+import { TiltCard } from '../components/TiltCard.js';
+import { 
+  Star, Download, ExternalLink, Github, ShieldCheck, CheckCircle2, 
+  Terminal, FileCode, Clock, MessageSquare, ArrowLeft, Sparkles 
 } from 'lucide-react';
 
 export const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { user } = useAuth();
-  const navigate = useNavigate();
-
   const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
-  const [showCheckout, setShowCheckout] = useState<boolean>(false);
-  const [hasEntitlement, setHasEntitlement] = useState<boolean>(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Review submission state
-  const [ratingInput, setRatingInput] = useState<number>(5);
-  const [commentInput, setCommentInput] = useState<string>('');
-  const [submittingReview, setSubmittingReview] = useState<boolean>(false);
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+
+  // Review Form State
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
 
-  const fetchProductDetails = async () => {
-    if (!slug) return;
+  useEffect(() => {
+    if (slug) fetchProduct();
+  }, [slug]);
+
+  const fetchProduct = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await api.get(`/marketplace/products/${slug}`);
       if (res.data.success) {
-        const prod = res.data.data;
-        setProduct(prod);
-        if (prod.pricingPlans && prod.pricingPlans.length > 0) {
-          setSelectedPlan(prod.pricingPlans[0]);
-        }
-
-        // Check if current user has entitlement
-        if (user) {
-          try {
-            const entRes = await api.get(`/entitlements/verify/${prod.id}`);
-            if (entRes.data.success && entRes.data.data.hasAccess) {
-              setHasEntitlement(true);
-            }
-          } catch {
-            // ignore
-          }
-        }
+        setProduct(res.data.data);
       }
-    } catch (e) {
-      console.error('Error fetching product:', e);
+    } catch (err: any) {
+      setError(err.response?.data?.error?.message || 'Product not found.');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchProductDetails();
-  }, [slug, user]);
-
-  const handleDownloadRelease = async (fileId: string) => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-    try {
-      // Trigger protected download
-      window.open(`http://localhost:5000/api/files/${fileId}/download?token=${localStorage.getItem('productforge_token')}`, '_blank');
-    } catch (e) {
-      alert('Unable to download file.');
-    }
-  };
-
-  const handlePostReview = async (e: React.FormEvent) => {
+  const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!product || !commentInput.trim()) return;
+    if (!product || !comment) return;
 
     setSubmittingReview(true);
     setReviewError(null);
     try {
       const res = await api.post('/reviews', {
         productId: product.id,
-        rating: ratingInput,
-        comment: commentInput.trim()
+        rating,
+        comment
       });
-
       if (res.data.success) {
-        setCommentInput('');
-        fetchProductDetails();
+        setComment('');
+        fetchProduct();
       }
     } catch (err: any) {
-      setReviewError(err.response?.data?.error?.message || 'Failed to submit review. You must own this product.');
+      setReviewError(err.response?.data?.error?.message || 'Review submission failed.');
     } finally {
       setSubmittingReview(false);
     }
   };
 
   if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-20 animate-pulse space-y-8">
-        <div className="h-10 bg-slate-900 rounded-xl w-1/3"></div>
-        <div className="h-64 bg-slate-900 rounded-3xl"></div>
-      </div>
-    );
+    return <div className="min-h-screen bg-[#060913] flex items-center justify-center text-xs text-slate-400">Loading Product Architecture...</div>;
   }
 
-  if (!product) {
+  if (error || !product) {
     return (
-      <div className="text-center py-24">
-        <h2 className="text-xl font-bold text-white">Product not found.</h2>
-        <Link to="/" className="mt-4 inline-block text-xs text-indigo-400 hover:underline">
+      <div className="min-h-[70vh] flex flex-col items-center justify-center p-4 space-y-4">
+        <div className="text-red-400 text-sm font-semibold">{error || 'Product not found'}</div>
+        <Link to="/" className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-semibold">
           Return to Marketplace
         </Link>
       </div>
     );
   }
 
-  const currentVersion = product.versions && product.versions.length > 0 ? product.versions[0] : null;
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
-      {/* Back Button */}
-      <Link
-        to="/"
-        className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" /> Back to Marketplace
-      </Link>
+    <div className="relative min-h-screen">
+      {/* 3D WebGL Background */}
+      <Background3D />
 
-      {/* Main Hero Header Card */}
-      <div className="glass-panel rounded-3xl p-6 sm:p-8 relative overflow-hidden border border-white/10">
-        <div className="flex flex-col lg:flex-row items-start justify-between gap-8 relative z-10">
-          <div className="flex items-start gap-5">
-            <img
-              src={product.logoUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80'}
-              alt={product.title}
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border border-white/10 bg-slate-900 shrink-0"
-            />
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-mono px-2.5 py-0.5 rounded-lg bg-indigo-500/10 text-cyan-400 border border-indigo-500/30">
-                  {product.category?.name}
-                </span>
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20 space-y-10">
+        
+        {/* Back Link */}
+        <Link to="/" className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Back to Marketplace Catalog
+        </Link>
+
+        {/* Top Product Hero */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Main Info Box */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="glass-panel-3d rounded-3xl p-8 border border-white/10 space-y-6">
+              
+              {/* Title & Badge Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-indigo-950 border border-white/20 overflow-hidden shadow-lg flex-shrink-0">
+                    <img src={product.logoUrl} alt={product.title} className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold font-display text-white">{product.title}</h1>
+                    <p className="text-xs text-cyan-400 font-medium">{product.tagline}</p>
+                  </div>
+                </div>
+
                 <LifecycleBadge status={product.status} />
-                {currentVersion && (
-                  <span className="text-xs font-mono px-2 py-0.5 rounded-lg bg-slate-900 text-slate-300 border border-white/10">
-                    Latest: {currentVersion.versionNumber}
-                  </span>
-                )}
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">
-                {product.title}
-              </h1>
+              {/* Description */}
+              <p className="text-xs text-slate-300 leading-relaxed font-light">{product.description}</p>
 
-              <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
-                {product.tagline}
-              </p>
-
-              <div className="flex items-center gap-4 text-xs text-slate-400 pt-2">
-                <div className="flex items-center gap-1 text-amber-400 font-semibold">
-                  <Star className="w-4 h-4 fill-amber-400" />
-                  <span>{product.averageRating > 0 ? product.averageRating.toFixed(1) : 'New'}</span>
-                  <span className="text-slate-500">({product.totalReviews} verified reviews)</span>
-                </div>
-                <span>•</span>
-                <span>{product.totalPurchases} customers</span>
-                <span>•</span>
-                <span>By {product.creator?.name || 'Verified Creator'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick CTA Actions */}
-          <div className="w-full lg:w-auto flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
-            {hasEntitlement ? (
-              <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-center space-y-2">
-                <span className="text-xs font-semibold text-emerald-400 flex items-center justify-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4" /> You own this product
-                </span>
-                <Link
-                  to="/library"
-                  className="w-full block py-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-glow transition-all"
-                >
-                  Open in My Library
-                </Link>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowCheckout(true)}
-                className="py-3.5 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-semibold shadow-glow transition-all flex items-center justify-center gap-2"
-              >
-                <Sparkles className="w-4 h-4 text-cyan-300" /> Purchase License ($
-                {selectedPlan?.price.toFixed(0) || '29'})
-              </button>
-            )}
-
-            {product.demoUrl && (
-              <a
-                href={product.demoUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="py-3 px-5 rounded-2xl bg-white/5 hover:bg-white/10 text-slate-200 text-xs font-semibold border border-white/10 transition-all flex items-center justify-center gap-1.5"
-              >
-                <ExternalLink className="w-3.5 h-3.5" /> Live Preview / Demo
-              </a>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Grid: Description & Pricing Plans */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left 2 Cols: Description, Release History & Reviews */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Description & Overview */}
-          <div className="glass-panel rounded-3xl p-6 sm:p-8 border border-white/10 space-y-4">
-            <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
-              <FileCode className="w-5 h-5 text-indigo-400" /> Product Overview & Architecture
-            </h3>
-            <div className="text-xs sm:text-sm text-slate-300 leading-relaxed whitespace-pre-line prose prose-invert max-w-none">
-              {product.description}
-            </div>
-          </div>
-
-          {/* Release History & Version Downloads */}
-          <div className="glass-panel rounded-3xl p-6 sm:p-8 border border-white/10 space-y-6">
-            <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
-              <GitBranch className="w-5 h-5 text-cyan-400" /> Release Changelogs & Version History
-            </h3>
-
-            <div className="space-y-4">
-              {product.versions && product.versions.length > 0 ? (
-                product.versions.map((ver) => (
-                  <div
-                    key={ver.id}
-                    className="p-5 rounded-2xl bg-slate-900/60 border border-white/5 space-y-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-indigo-950 text-cyan-300 border border-indigo-500/30">
-                          {ver.versionNumber}
-                        </span>
-                        <span className="text-sm font-semibold text-white">{ver.releaseTitle}</span>
-                      </div>
-                      <span className="text-[11px] text-slate-500">
-                        {new Date(ver.publishedAt).toLocaleDateString()}
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-slate-400">{ver.releaseNotes}</p>
-
-                    {ver.changelog && (
-                      <div className="p-3 rounded-xl bg-slate-950/80 border border-white/5 text-[11px] font-mono text-slate-300 whitespace-pre-line">
-                        {ver.changelog}
-                      </div>
-                    )}
-
-                    {ver.files && ver.files.length > 0 && (
-                      <div className="pt-2 flex flex-wrap gap-2">
-                        {ver.files.map((file) => (
-                          <button
-                            key={file.id}
-                            onClick={() => handleDownloadRelease(file.id)}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-all ${
-                              hasEntitlement
-                                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-glow'
-                                : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
-                            }`}
-                          >
-                            <Download className="w-3.5 h-3.5" />
-                            {file.fileName} ({(file.fileSize / 1024 / 1024).toFixed(1)} MB)
-                            {!hasEntitlement && <span className="text-[10px] text-amber-400 ml-1">(License Required)</span>}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs text-slate-400">No releases published yet.</p>
-              )}
-            </div>
-          </div>
-
-          {/* Customer Reviews Section */}
-          <div className="glass-panel rounded-3xl p-6 sm:p-8 border border-white/10 space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-amber-400" /> Verified Customer Reviews
-              </h3>
-              <span className="text-xs text-slate-400">
-                Avg Rating: {product.averageRating > 0 ? product.averageRating.toFixed(1) : '5.0'} / 5.0
-              </span>
-            </div>
-
-            {/* Write Review Form (For Entitled Buyers) */}
-            {hasEntitlement && (
-              <form onSubmit={handlePostReview} className="p-4 rounded-2xl bg-indigo-950/20 border border-indigo-500/20 space-y-3">
-                <h4 className="text-xs font-semibold text-white">Leave a Verified Customer Review</h4>
-                {reviewError && (
-                  <p className="text-xs text-red-400 bg-red-500/10 p-2 rounded-lg">{reviewError}</p>
-                )}
+              {/* Creator & Links Footer */}
+              <div className="pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-400">Rating:</span>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => setRatingInput(star)}
-                      className="p-1 text-amber-400 hover:scale-110 transition-transform"
-                    >
-                      <Star
-                        className={`w-4 h-4 ${
-                          star <= ratingInput ? 'fill-amber-400' : 'text-slate-600'
-                        }`}
-                      />
-                    </button>
-                  ))}
+                  <img
+                    src={product.creator?.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=Alex'}
+                    alt={product.creator?.name}
+                    className="w-6 h-6 rounded-full border border-white/20"
+                  />
+                  <span>Created by <strong className="text-white">{product.creator?.name}</strong></span>
                 </div>
-                <textarea
-                  rows={3}
-                  placeholder="Share your technical experience with this software package..."
-                  value={commentInput}
-                  onChange={(e) => setCommentInput(e.target.value)}
-                  className="w-full p-3 rounded-xl glass-input text-xs"
-                />
-                <button
-                  type="submit"
-                  disabled={submittingReview}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-semibold shadow-glow"
-                >
-                  {submittingReview ? 'Posting...' : 'Submit Review'}
-                </button>
-              </form>
-            )}
 
-            {/* Reviews List */}
-            <div className="space-y-4">
-              {product.reviews && product.reviews.length > 0 ? (
-                product.reviews.map((rev) => (
-                  <div key={rev.id} className="p-4 rounded-2xl bg-slate-900/50 border border-white/5 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <img
-                          src={rev.customer?.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=' + rev.customer?.name}
-                          alt=""
-                          className="w-7 h-7 rounded-full border border-white/10"
-                        />
-                        <div>
-                          <span className="text-xs font-semibold text-white">{rev.customer?.name}</span>
-                          <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded ml-2 border border-emerald-500/20">
-                            Verified Buyer
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-0.5 text-amber-400">
-                        {Array.from({ length: rev.rating }).map((_, i) => (
-                          <Star key={i} className="w-3 h-3 fill-amber-400" />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-xs text-slate-300 leading-relaxed">{rev.comment}</p>
-                    <span className="text-[10px] text-slate-500 block">
-                      {new Date(rev.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs text-slate-400 text-center py-6">No customer reviews yet.</p>
-              )}
+                <div className="flex items-center gap-3">
+                  {product.demoUrl && (
+                    <a
+                      href={product.demoUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1 text-indigo-400 hover:underline"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" /> Live Demo
+                    </a>
+                  )}
+                  {product.githubRepo && (
+                    <a
+                      href={product.githubRepo}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1 text-slate-300 hover:underline"
+                    >
+                      <Github className="w-3.5 h-3.5" /> GitHub Repo
+                    </a>
+                  )}
+                </div>
+              </div>
+
             </div>
+          </div>
+
+          {/* Right Pricing & Checkout Card */}
+          <TiltCard>
+            <div className="glass-panel-3d rounded-3xl p-7 border border-white/15 space-y-6 h-full flex flex-col justify-between">
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                  <span className="text-xs text-slate-400">License Entitlement</span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+                    Instant Access
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Starting Price</span>
+                  <p className="text-3xl font-extrabold font-mono text-white text-gradient-cyan-indigo">
+                    ${product.pricingPlans && product.pricingPlans.length > 0 ? product.pricingPlans[0].price.toFixed(2) : '29.00'}
+                  </p>
+                </div>
+
+                <ul className="space-y-2 text-xs text-slate-300">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                    <span>Cryptographic License Key (`PF-XXXX-XXXX`)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                    <span>SHA-256 Verified Binary Releases</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                    <span>Full Source Code & Updates</span>
+                  </li>
+                </ul>
+              </div>
+
+              <button
+                onClick={() => setCheckoutModalOpen(true)}
+                className="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-cyan-500 to-emerald-500 hover:from-indigo-500 hover:to-emerald-400 text-white font-bold text-sm shadow-glow-indigo transition-all flex items-center justify-center gap-2"
+              >
+                Acquire License Entitlement <ShieldCheck className="w-4 h-4" />
+              </button>
+
+            </div>
+          </TiltCard>
+
+        </div>
+
+        {/* Release Version Changelogs Timeline */}
+        <div className="glass-panel-3d rounded-3xl p-8 border border-white/10 space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-white text-base font-display flex items-center gap-2">
+              <Clock className="w-4 h-4 text-cyan-400" /> Release Version Changelogs & Downloads
+            </h3>
+            <span className="text-xs text-slate-400 font-mono">SemVer History</span>
+          </div>
+
+          <div className="space-y-4">
+            {(!product.versions || product.versions.length === 0) ? (
+              <p className="text-xs text-slate-500 text-center py-4">No published releases yet for this product.</p>
+            ) : (
+              product.versions.map((ver) => (
+                <div key={ver.id} className="p-4 rounded-2xl bg-slate-900/80 border border-white/5 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-indigo-950 text-cyan-300 border border-indigo-500/30">
+                        {ver.versionNumber}
+                      </span>
+                      <h4 className="font-bold text-white text-xs">{ver.releaseTitle}</h4>
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-mono">{new Date(ver.publishedAt).toLocaleDateString()}</span>
+                  </div>
+
+                  <p className="text-xs text-slate-300 font-mono whitespace-pre-wrap pl-2 border-l-2 border-indigo-500/40">{ver.releaseNotes}</p>
+
+                  {/* Version Binary Files */}
+                  {ver.files && ver.files.length > 0 && (
+                    <div className="pt-2 flex flex-wrap gap-2">
+                      {ver.files.map((file) => (
+                        <div key={file.id} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-indigo-950/60 border border-indigo-500/20 text-xs font-mono text-indigo-300">
+                          <FileCode className="w-3.5 h-3.5 text-cyan-400" />
+                          <span>{file.fileName}</span>
+                          <span className="text-[10px] text-slate-500">({(file.fileSize / 1024 / 1024).toFixed(2)} MB)</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
 
-        {/* Right Col: Pricing Tier Card */}
-        <div className="space-y-6">
-          <div className="glass-panel rounded-3xl p-6 sm:p-7 border border-white/10 sticky top-24 space-y-6">
-            <h3 className="text-base font-bold font-display text-white">License & Pricing Tiers</h3>
+        {/* Customer Reviews Section */}
+        <div className="glass-panel-3d rounded-3xl p-8 border border-white/10 space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-white text-base font-display flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-amber-400" /> Verified Customer Reviews
+            </h3>
+            {product.averageRating && (
+              <span className="text-xs font-mono font-bold text-amber-400 flex items-center gap-1">
+                <Star className="w-4 h-4 fill-amber-400" /> {product.averageRating.toFixed(1)} / 5.0
+              </span>
+            )}
+          </div>
 
-            <div className="space-y-3">
-              {product.pricingPlans?.map((plan) => {
-                const isSelected = selectedPlan?.id === plan.id;
-                const features: string[] = typeof plan.features === 'string' ? JSON.parse(plan.features) : plan.features;
+          {/* Add Review Form */}
+          <form onSubmit={handleReviewSubmit} className="p-4 rounded-2xl bg-slate-900/60 border border-white/5 space-y-3">
+            <span className="text-xs text-slate-300 font-medium block">Post a Verified Review</span>
 
-                return (
-                  <div
-                    key={plan.id}
-                    onClick={() => setSelectedPlan(plan)}
-                    className={`p-4 rounded-2xl cursor-pointer transition-all border ${
-                      isSelected
-                        ? 'bg-indigo-950/60 border-indigo-500 shadow-glow'
-                        : 'bg-slate-900/50 border-white/5 hover:border-white/20'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-white">{plan.name}</span>
-                      <span className="text-base font-extrabold font-display text-cyan-400">
-                        ${plan.price.toFixed(0)}
-                      </span>
-                    </div>
+            {reviewError && (
+              <div className="p-2 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-300">
+                {reviewError}
+              </div>
+            )}
 
-                    <ul className="mt-3 space-y-1.5">
-                      {features.map((feat, idx) => (
-                        <li key={idx} className="text-[11px] text-slate-300 flex items-center gap-1.5">
-                          <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                          {feat}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                );
-              })}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400">Rating:</span>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  className="p-1 text-amber-400 focus:outline-none"
+                >
+                  <Star className={`w-4 h-4 ${star <= rating ? 'fill-amber-400' : 'text-slate-600'}`} />
+                </button>
+              ))}
             </div>
+
+            <textarea
+              rows={2}
+              placeholder="Share your experience using this digital software..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="w-full p-3 rounded-xl glass-input-3d text-white text-xs"
+              required
+            />
 
             <button
-              onClick={() => setShowCheckout(true)}
-              className="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-glow transition-all flex items-center justify-center gap-2"
+              type="submit"
+              disabled={submittingReview}
+              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-glow-indigo"
             >
-              <Key className="w-4 h-4 text-cyan-300" /> Instant Sandbox Checkout ($
-              {selectedPlan?.price.toFixed(0) || '29'})
+              {submittingReview ? 'Posting...' : 'Post Review'}
             </button>
+          </form>
+
+          {/* Review List */}
+          <div className="space-y-3">
+            {(!product.reviews || product.reviews.length === 0) ? (
+              <p className="text-xs text-slate-500 text-center py-4">No reviews yet. Be the first verified buyer to leave a review!</p>
+            ) : (
+              product.reviews.map((rev) => (
+                <div key={rev.id} className="p-4 rounded-2xl bg-slate-900/40 border border-white/5 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={rev.customer?.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=Customer'}
+                        alt={rev.customer?.name}
+                        className="w-5 h-5 rounded-full"
+                      />
+                      <span className="text-xs font-semibold text-white">{rev.customer?.name}</span>
+                    </div>
+
+                    <div className="flex items-center gap-1 text-amber-400 font-mono text-xs">
+                      <Star className="w-3.5 h-3.5 fill-amber-400" />
+                      <span>{rev.rating}.0</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-300">{rev.comment}</p>
+                </div>
+              ))
+            )}
           </div>
+
         </div>
+
       </div>
 
       {/* Checkout Modal */}
-      {showCheckout && (
+      {checkoutModalOpen && (
         <CheckoutModal
           product={product}
-          selectedPlan={selectedPlan}
-          onClose={() => setShowCheckout(false)}
-          onSuccess={() => {
-            setHasEntitlement(true);
-            fetchProductDetails();
-          }}
+          onClose={() => setCheckoutModalOpen(false)}
         />
       )}
     </div>

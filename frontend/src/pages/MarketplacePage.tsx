@@ -1,48 +1,58 @@
-import React, { useState, useEffect } from 'react';
-import { Product, Category } from '../types/index.js';
+import React, { useEffect, useState } from 'react';
 import { api } from '../services/api.js';
+import { Product, Category } from '../types/index.js';
 import { ProductCard } from '../components/ProductCard.js';
 import { CheckoutModal } from '../components/CheckoutModal.js';
-import { Search, Sparkles, SlidersHorizontal, ArrowUpDown, Filter, Terminal, ShieldCheck, Zap } from 'lucide-react';
+import { Background3D } from '../components/Background3D.js';
+import { Hero3DShowcase } from '../components/Hero3DShowcase.js';
+import { Search, Filter, Sparkles, Layers, ShieldCheck, Zap, ArrowUpRight } from 'lucide-react';
 
 export const MarketplacePage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [sortBy, setSortBy] = useState<string>('popular');
-  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
+  const [loading, setLoading] = useState(true);
+
   const [checkoutProduct, setCheckoutProduct] = useState<Product | null>(null);
 
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const params: any = {};
-      if (selectedCategory !== 'all') params.category = selectedCategory;
-      if (searchQuery.trim()) params.search = searchQuery.trim();
-      if (sortBy) params.sortBy = sortBy;
-
-      const [prodRes, catRes] = await Promise.all([
-        api.get('/marketplace/products', { params }),
-        api.get('/marketplace/categories')
-      ]);
-
-      if (prodRes.data.success) {
-        setProducts(prodRes.data.data.products);
-      }
-      if (catRes.data.success) {
-        setCategories(catRes.data.data);
-      }
-    } catch (e) {
-      console.error('Error loading marketplace:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     fetchProducts();
   }, [selectedCategory, sortBy]);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get('/marketplace/categories');
+      if (res.data.success) {
+        setCategories(res.data.data);
+      }
+    } catch (err) {
+      console.error('Failed to load categories', err);
+    }
+  };
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const params: any = { sortBy };
+      if (selectedCategory) params.category = selectedCategory;
+      if (search) params.search = search;
+
+      const res = await api.get('/marketplace/products', { params });
+      if (res.data.success) {
+        setProducts(res.data.data.products);
+      }
+    } catch (err) {
+      console.error('Failed to load products', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,138 +60,154 @@ export const MarketplacePage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-12 pb-16">
-      {/* Hero Section */}
-      <section className="relative pt-12 pb-8 px-4 text-center overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-indigo-600/20 via-cyan-500/15 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+    <div className="relative min-h-screen">
+      {/* 3D Interactive WebGL Background */}
+      <Background3D />
 
-        <div className="max-w-4xl mx-auto space-y-4 relative z-10">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-cyan-300 border border-indigo-500/30">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400" /> Curated Software, SaaS & Developer Tools
-          </div>
+      {/* Main Content Area */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20 space-y-16">
+        
+        {/* 3D Hero Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center pt-6">
+          <div className="space-y-6 text-center lg:text-left">
+            
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel-3d border border-indigo-500/30 text-indigo-300 text-xs font-semibold shadow-glow-indigo">
+              <Sparkles className="w-4 h-4 text-cyan-400 animate-spin" style={{ animationDuration: '6s' }} />
+              ProductForge 3D Live Digital Product Studio
+            </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black font-display tracking-tight text-white leading-[1.1]">
-            Build, Distribute & Scale <br />
-            <span className="bg-gradient-to-r from-indigo-400 via-cyan-300 to-emerald-400 bg-clip-text text-transparent">
-              Digital Software Products
-            </span>
-          </h1>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold font-display leading-tight text-white tracking-tight">
+              Software Releases & <br />
+              <span className="text-gradient-cyan-indigo">Digital Product Lifecycle</span>
+            </h1>
 
-          <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            A developer-first lifecycle marketplace. Access production-ready SaaS starters, microservice APIs, CLI automations, and UI design libraries.
-          </p>
+            <p className="text-base text-slate-300 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
+              Discover, license, and deploy developer tools, SaaS templates, microservices, and CLI utilities with cryptographic entitlement verification and live release engineering.
+            </p>
 
-          {/* Search Bar */}
-          <form onSubmit={handleSearchSubmit} className="max-w-2xl mx-auto mt-6 flex gap-2">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+            {/* Interactive Search Bar */}
+            <form onSubmit={handleSearchSubmit} className="relative max-w-lg mx-auto lg:mx-0">
+              <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search SaaS, APIs, CLI tools, UI kits, templates..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-4 py-3.5 rounded-2xl glass-input text-xs sm:text-sm placeholder:text-slate-500"
+                placeholder="Search SaaS, APIs, CLI tools, UI kits..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-12 pr-28 py-4 rounded-2xl glass-input-3d text-white placeholder-slate-400 text-sm shadow-xl"
               />
-            </div>
-            <button
-              type="submit"
-              className="px-5 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs sm:text-sm shadow-glow transition-all"
-            >
-              Search
-            </button>
-          </form>
-        </div>
-      </section>
-
-      {/* Category Pills & Filters Bar */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/10">
-          {/* Category Tabs */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
-            <button
-              onClick={() => setSelectedCategory('all')}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-                selectedCategory === 'all'
-                  ? 'bg-indigo-600 text-white shadow-glow'
-                  : 'glass-panel text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              All Software
-            </button>
-            {categories.map((cat) => (
               <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.slug)}
-                className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-                  selectedCategory === cat.slug
-                    ? 'bg-indigo-600 text-white shadow-glow'
-                    : 'glass-panel text-slate-400 hover:text-white hover:bg-white/5'
+                type="submit"
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white text-xs font-bold shadow-glow-indigo transition-all"
+              >
+                Search
+              </button>
+            </form>
+
+            {/* Trust Badges */}
+            <div className="pt-2 flex items-center justify-center lg:justify-start gap-6 text-xs text-slate-400 font-mono">
+              <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-emerald-400" /> Cryptographic License Keys</span>
+              <span className="flex items-center gap-1.5"><Zap className="w-4 h-4 text-cyan-400" /> SemVer Asset Streams</span>
+            </div>
+          </div>
+
+          {/* Interactive 3D Hero Showcase Cube */}
+          <div className="w-full">
+            <Hero3DShowcase />
+          </div>
+        </div>
+
+        {/* Category Pills & Sorting Bar */}
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 glass-panel-3d p-4 rounded-2xl border border-white/10">
+            
+            {/* Category Filter Pills */}
+            <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 scrollbar-none">
+              <button
+                type="button"
+                onClick={() => setSelectedCategory('')}
+                className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
+                  selectedCategory === ''
+                    ? 'bg-gradient-to-r from-indigo-600 to-cyan-500 text-white border-cyan-400 shadow-glow-indigo'
+                    : 'bg-slate-900/60 border-white/5 text-slate-400 hover:text-white hover:border-white/20'
                 }`}
               >
-                {cat.name}
+                All Products
               </button>
-            ))}
+
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
+                    selectedCategory === cat.id
+                      ? 'bg-gradient-to-r from-indigo-600 to-cyan-500 text-white border-cyan-400 shadow-glow-indigo'
+                      : 'bg-slate-900/60 border-white/5 text-slate-400 hover:text-white hover:border-white/20'
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Sort Dropdown */}
+            <div className="flex items-center gap-2 text-xs text-slate-400 self-end sm:self-auto">
+              <Filter className="w-4 h-4 text-indigo-400" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-slate-900 border border-white/10 text-white rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500"
+              >
+                <option value="newest">Newest Releases</option>
+                <option value="popular">Most Popular</option>
+                <option value="rating">Top Rated</option>
+                <option value="price_low">Price: Low to High</option>
+                <option value="price_high">Price: High to Low</option>
+              </select>
+            </div>
           </div>
 
-          {/* Sort Dropdown */}
-          <div className="flex items-center gap-3 self-end md:self-auto">
-            <span className="text-xs text-slate-400 flex items-center gap-1.5 font-mono">
-              <ArrowUpDown className="w-3.5 h-3.5" /> Sort:
-            </span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="glass-input text-xs px-3 py-2 rounded-xl text-slate-200 cursor-pointer"
-            >
-              <option value="popular" className="bg-slate-900 text-white">Most Popular</option>
-              <option value="rating" className="bg-slate-900 text-white">Highest Rated</option>
-              <option value="newest" className="bg-slate-900 text-white">Newest Releases</option>
-            </select>
-          </div>
+          {/* Product Grid */}
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1, 2, 3, 4, 5, 6].map((n) => (
+                <div key={n} className="glass-panel-3d rounded-3xl p-6 h-80 animate-pulse space-y-4">
+                  <div className="h-40 bg-slate-800/60 rounded-2xl" />
+                  <div className="h-4 bg-slate-800/60 rounded w-3/4" />
+                  <div className="h-3 bg-slate-800/60 rounded w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : products.length === 0 ? (
+            <div className="glass-panel-3d rounded-3xl p-12 text-center space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-950/80 border border-indigo-500/30 flex items-center justify-center mx-auto text-indigo-400">
+                <Layers className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-white">No products found</h3>
+              <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                Try clearing your search query or selecting a different category filter.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onQuickBuy={(prod) => setCheckoutProduct(prod)}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Product Grid */}
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-8">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="glass-panel h-64 rounded-2xl animate-pulse p-6"></div>
-            ))}
-          </div>
-        ) : products.length === 0 ? (
-          <div className="text-center py-20 glass-panel rounded-3xl mt-8">
-            <p className="text-slate-400 text-sm">No products found matching your filter criteria.</p>
-            <button
-              onClick={() => {
-                setSelectedCategory('all');
-                setSearchQuery('');
-              }}
-              className="mt-4 px-4 py-2 rounded-xl bg-indigo-600/30 text-indigo-300 text-xs font-semibold hover:bg-indigo-600/50"
-            >
-              Reset Filters
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-8">
-            {products.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                onQuickBuy={(prod) => setCheckoutProduct(prod)}
-              />
-            ))}
-          </div>
-        )}
-      </section>
+      </div>
 
       {/* Checkout Modal */}
       {checkoutProduct && (
         <CheckoutModal
           product={checkoutProduct}
-          selectedPlan={null}
           onClose={() => setCheckoutProduct(null)}
-          onSuccess={() => {
-            fetchProducts();
-          }}
         />
       )}
     </div>

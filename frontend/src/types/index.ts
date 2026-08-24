@@ -25,7 +25,7 @@ export interface Category {
   icon: string;
   description?: string;
   _count?: {
-    products: number;
+    products?: number;
   };
 }
 
@@ -104,6 +104,11 @@ export interface Product {
   pricingPlans?: PricingPlan[];
   versions?: ProductVersion[];
   reviews?: Review[];
+  _count?: {
+    orderItems?: number;
+    reviews?: number;
+    entitlements?: number;
+  };
 }
 
 export interface Entitlement {
@@ -114,7 +119,9 @@ export interface Entitlement {
   status: 'ACTIVE' | 'SUSPENDED' | 'EXPIRED';
   expiresAt?: string;
   createdAt: string;
+  grantedAt?: string;
   product: Product;
+  pricingPlan?: PricingPlan;
   orderItem?: {
     pricingPlan: PricingPlan;
   };

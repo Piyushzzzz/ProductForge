@@ -1,64 +1,146 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
-:root {
-  color-scheme: dark;
+@layer base {
+  body {
+    @apply bg-[#060913] text-slate-100 font-sans antialiased overflow-x-hidden selection:bg-indigo-500 selection:text-white;
+  }
 }
 
-body {
-  background-color: #0B1326;
-  color: #E2E8F0;
-  font-family: 'Inter', sans-serif;
-  overflow-x: hidden;
+/* ─── 3D Perspective & Preservation ─── */
+.preserve-3d {
+  transform-style: preserve-3d;
 }
 
-/* Glassmorphism Styles */
-.glass-panel {
-  background: rgba(23, 31, 51, 0.7);
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.perspective-1200 {
+  perspective: 1200px;
+}
+
+/* ─── Hyper-Glassmorphism 3D Containers ─── */
+.glass-panel-3d {
+  background: rgba(13, 20, 38, 0.65);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 20px 50px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel-3d:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 
+    0 30px 60px rgba(0, 0, 0, 0.7),
+    0 0 30px rgba(99, 102, 241, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.glass-card-3d {
+  background: linear-gradient(135deg, rgba(23, 31, 56, 0.7) 0%, rgba(11, 16, 32, 0.8) 100%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.glass-card-3d:hover {
+  transform: translateY(-8px) rotateX(4deg) rotateY(-2deg);
+  border-color: rgba(34, 211, 238, 0.35);
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.7),
+    0 0 25px rgba(34, 211, 238, 0.25),
+    inset 0 1px 1px rgba(255, 255, 255, 0.25);
+}
+
+/* ─── Glowing Neons ─── */
+.shadow-glow-indigo {
+  box-shadow: 0 0 25px rgba(99, 102, 241, 0.45);
+}
+
+.shadow-glow-cyan {
+  box-shadow: 0 0 25px rgba(34, 211, 238, 0.45);
+}
+
+.shadow-glow-emerald {
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.45);
+}
+
+.shadow-glow-amber {
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.45);
+}
+
+.text-gradient-cyan-indigo {
+  background: linear-gradient(135deg, #38BDF8 0%, #818CF8 50%, #C084FC 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-emerald-cyan {
+  background: linear-gradient(135deg, #34D399 0%, #22D3EE 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ─── Glass Inputs & Form Elements ─── */
+.glass-input-3d {
+  background: rgba(10, 15, 30, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+  transition: all 0.3s ease;
 }
 
-.glass-panel-hover {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.glass-panel-hover:hover {
-  background: rgba(30, 41, 59, 0.85);
-  border-color: rgba(99, 102, 241, 0.3);
-  box-shadow: 0 0 25px -5px rgba(99, 102, 241, 0.25);
-}
-
-.glass-input {
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #F8FAFC;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.glass-input:focus {
+.glass-input-3d:focus {
   outline: none;
   border-color: #6366F1;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* ─── Floating & Pulse Animations ─── */
+@keyframes float3D {
+  0%, 100% {
+    transform: translateY(0px) rotateX(0deg) rotateY(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotateX(3deg) rotateY(-3deg);
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: #0B1326;
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.08);
+  }
 }
 
-::-webkit-scrollbar-thumb {
-  background: #1E293B;
-  border-radius: 4px;
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(1000%);
+  }
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+.animate-float-3d {
+  animation: float3D 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 4s ease-in-out infinite;
+}
+
+.animate-scanline {
+  animation: scanline 8s linear infinite;
 }

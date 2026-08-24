@@ -7,10 +7,10 @@ import { X, ShieldCheck, CheckCircle2, Sparkles, CreditCard, Key, ArrowRight } f
 
 export const CheckoutModal: React.FC<{
   product: Product;
-  selectedPlan: PricingPlan | null;
+  selectedPlan?: PricingPlan | null;
   onClose: () => void;
-  onSuccess: (entitlement: any) => void;
-}> = ({ product, selectedPlan, onClose, onSuccess }) => {
+  onSuccess?: (entitlement: any) => void;
+}> = ({ product, selectedPlan = null, onClose, onSuccess }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -36,7 +36,7 @@ export const CheckoutModal: React.FC<{
 
       if (res.data.success) {
         setCompletedEntitlement(res.data.data.entitlement);
-        onSuccess(res.data.data.entitlement);
+        if (onSuccess) onSuccess(res.data.data.entitlement);
       } else {
         setError(res.data.error?.message || 'Checkout failed.');
       }
@@ -48,8 +48,8 @@ export const CheckoutModal: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-      <div className="glass-panel w-full max-w-lg rounded-3xl p-6 shadow-2xl relative border border-white/10 animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div className="glass-panel-3d w-full max-w-lg rounded-3xl p-6 shadow-2xl relative border border-white/15 animate-in fade-in zoom-in-95 duration-200">
         <button
           onClick={onClose}
           className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-all"
@@ -59,7 +59,7 @@ export const CheckoutModal: React.FC<{
 
         {completedEntitlement ? (
           <div className="text-center py-6 space-y-5">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30 shadow-glow">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30 shadow-glow-emerald">
               <CheckCircle2 className="w-8 h-8" />
             </div>
 
@@ -70,20 +70,20 @@ export const CheckoutModal: React.FC<{
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-white/10 text-left space-y-2">
+            <div className="p-4 rounded-2xl bg-slate-900/80 border border-white/10 text-left space-y-2 font-mono">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">Software Product:</span>
-                <span className="font-semibold text-white">{product.title}</span>
+                <span className="text-slate-400 font-sans">Software Product:</span>
+                <span className="font-semibold text-white font-sans">{product.title}</span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">License Key:</span>
+                <span className="text-slate-400 font-sans">License Key:</span>
                 <span className="font-mono text-cyan-300 font-bold bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-500/30">
                   {completedEntitlement.licenseKey}
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">Access Status:</span>
-                <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                <span className="text-slate-400 font-sans">Access Status:</span>
+                <span className="text-emerald-400 font-semibold flex items-center gap-1 font-sans">
                   <ShieldCheck className="w-3.5 h-3.5" /> ACTIVE ENTITLEMENT
                 </span>
               </div>
@@ -95,7 +95,7 @@ export const CheckoutModal: React.FC<{
                   onClose();
                   navigate('/library');
                 }}
-                className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-glow transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-glow-indigo transition-all flex items-center justify-center gap-2"
               >
                 Go to My Library <ArrowRight className="w-4 h-4" />
               </button>
@@ -123,11 +123,11 @@ export const CheckoutModal: React.FC<{
             <div className="p-4 rounded-2xl bg-slate-900/60 border border-white/5 space-y-3 mb-5">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-slate-300 font-medium">{product.title}</span>
-                <span className="text-xs font-mono font-semibold text-cyan-400">{plan?.name}</span>
+                <span className="text-xs font-mono font-semibold text-cyan-400">{plan?.name || 'Standard License'}</span>
               </div>
               <div className="flex items-center justify-between pt-2 border-t border-white/10">
                 <span className="text-xs text-slate-400">Total Price (USD):</span>
-                <span className="text-xl font-bold font-display text-white">${plan?.price.toFixed(2)}</span>
+                <span className="text-xl font-bold font-display text-white">${plan?.price.toFixed(2) || '29.00'}</span>
               </div>
             </div>
 
@@ -145,14 +145,14 @@ export const CheckoutModal: React.FC<{
             <button
               onClick={handleCheckout}
               disabled={loading}
-              className="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-semibold shadow-glow transition-all flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-semibold shadow-glow-indigo transition-all flex items-center justify-center gap-2"
             >
               {loading ? (
                 <span>Simulating Payment & Generating License...</span>
               ) : (
                 <>
                   <Key className="w-4 h-4 text-cyan-300" /> Confirm & Activate Access ($
-                  {plan?.price.toFixed(2)})
+                  {plan?.price.toFixed(2) || '29.00'})
                 </>
               )}
             </button>

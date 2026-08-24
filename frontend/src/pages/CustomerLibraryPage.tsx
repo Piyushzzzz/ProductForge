@@ -1,26 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Entitlement } from '../types/index.js';
+import React, { useEffect, useState } from 'react';
 import { api } from '../services/api.js';
-import { useAuth } from '../context/AuthContext.js';
-import {
-  FolderLock,
-  Download,
-  Key,
-  Copy,
-  Check,
-  ExternalLink,
-  ShieldCheck,
-  Sparkles,
-  GitBranch,
-  Star
-} from 'lucide-react';
+import { Entitlement } from '../types/index.js';
+import { Background3D } from '../components/Background3D.js';
+import { TiltCard } from '../components/TiltCard.js';
+import { Key, Download, Copy, Check, ShieldCheck, Sparkles, Layers, FileCode } from 'lucide-react';
 
 export const CustomerLibraryPage: React.FC = () => {
-  const { user } = useAuth();
   const [entitlements, setEntitlements] = useState<Entitlement[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchLibrary();
+  }, []);
 
   const fetchLibrary = async () => {
     setLoading(true);
@@ -29,189 +21,168 @@ export const CustomerLibraryPage: React.FC = () => {
       if (res.data.success) {
         setEntitlements(res.data.data);
       }
-    } catch (e) {
-      console.error('Error loading library:', e);
+    } catch (err) {
+      console.error('Failed to load entitlements library', err);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchLibrary();
-  }, []);
-
-  const copyToClipboard = (keyText: string) => {
-    navigator.clipboard.writeText(keyText);
-    setCopiedKey(keyText);
-    setTimeout(() => setCopiedKey(null), 2000);
+  const copyToClipboard = (key: string) => {
+    navigator.clipboard.writeText(key);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2500);
   };
 
-  const handleDownload = (fileId: string) => {
-    window.open(
-      `http://localhost:5000/api/files/${fileId}/download?token=${localStorage.getItem('productforge_token')}`,
-      '_blank'
-    );
+  const handleDownloadFile = async (fileId: string, fileName: string) => {
+    try {
+      const response = await api.get(`/files/${fileId}/download`, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err: any) {
+      alert(err.response?.data?.error?.message || 'Download failed.');
+    }
   };
-
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-20 animate-pulse space-y-6">
-        <div className="h-8 bg-slate-900 rounded-xl w-1/4"></div>
-        <div className="h-64 bg-slate-900 rounded-3xl"></div>
-      </div>
-    );
-  }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Header */}
-      <div className="pb-6 border-b border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="relative min-h-screen">
+      {/* 3D WebGL Background */}
+      <Background3D />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20 space-y-10">
+        
+        {/* Header */}
         <div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-lg border border-emerald-500/30">
-              ENTITLED ASSETS
-            </span>
-            <span className="text-xs text-slate-400">• {entitlements.length} Owned Products</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-panel-3d border border-indigo-500/30 text-indigo-300 text-xs font-semibold shadow-glow-indigo mb-2">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400" /> Customer Digital Vault
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black font-display text-white mt-1">
-            My Purchased Digital Products
-          </h1>
+          <h1 className="text-3xl font-extrabold font-display text-white">Your Licensed Software Library</h1>
+          <p className="text-xs text-slate-400">Access active license keys, stream verified binaries, and manage software entitlements</p>
         </div>
 
-        <Link
-          to="/"
-          className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-glow transition-all"
-        >
-          Explore More Software
-        </Link>
-      </div>
-
-      {/* Entitlements Grid */}
-      {entitlements.length === 0 ? (
-        <div className="text-center py-20 glass-panel rounded-3xl space-y-4">
-          <FolderLock className="w-12 h-12 text-slate-500 mx-auto" />
-          <h3 className="text-base font-bold text-white">No products in your library yet.</h3>
-          <p className="text-xs text-slate-400 max-w-sm mx-auto">
-            Browse the marketplace to discover SaaS boilerplates, dev tools, and software APIs.
-          </p>
-          <Link
-            to="/"
-            className="inline-block px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-glow"
-          >
-            Browse Marketplace
-          </Link>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {entitlements.map((ent) => {
-            const product = ent.product;
-            const currentVersion = product.versions && product.versions.length > 0 ? product.versions[0] : null;
-
-            return (
-              <div
-                key={ent.id}
-                className="glass-panel rounded-3xl p-6 border border-white/10 flex flex-col justify-between space-y-6 relative overflow-hidden"
-              >
-                <div className="space-y-4">
-                  {/* Top: Status & Info */}
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={product.logoUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80'}
-                        alt=""
-                        className="w-12 h-12 rounded-xl object-cover border border-white/10 bg-slate-900"
-                      />
-                      <div>
-                        <Link
-                          to={`/products/${product.slug}`}
-                          className="font-bold text-sm text-white hover:text-indigo-400 transition-colors"
-                        >
-                          {product.title}
-                        </Link>
-                        <span className="text-[10px] text-slate-400 block font-mono">
-                          Plan: {ent.orderItem?.pricingPlan?.name || 'Standard License'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30 shrink-0">
-                      <ShieldCheck className="w-3 h-3" /> ACTIVE LICENSE
-                    </span>
-                  </div>
-
-                  {/* License Key Box */}
-                  <div className="p-3 rounded-2xl bg-slate-900/80 border border-white/5 flex items-center justify-between gap-2">
-                    <div className="space-y-0.5">
-                      <span className="text-[10px] text-slate-400 block font-mono">LICENSE KEY</span>
-                      <span className="text-xs font-mono font-bold text-cyan-300">
-                        {ent.licenseKey}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => copyToClipboard(ent.licenseKey)}
-                      className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-all flex items-center gap-1 text-xs"
-                      title="Copy Key"
-                    >
-                      {copiedKey === ent.licenseKey ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5" />
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Latest Release & Files */}
-                  {currentVersion && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-slate-200 flex items-center gap-1">
-                          <GitBranch className="w-3.5 h-3.5 text-indigo-400" /> Latest Release ({currentVersion.versionNumber})
-                        </span>
-                        <span className="text-[10px] text-slate-400">{currentVersion.releaseTitle}</span>
-                      </div>
-
-                      {currentVersion.files && currentVersion.files.length > 0 ? (
-                        <div className="space-y-1.5">
-                          {currentVersion.files.map((file) => (
-                            <button
-                              key={file.id}
-                              onClick={() => handleDownload(file.id)}
-                              className="w-full py-2 px-3 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 text-cyan-300 hover:text-white text-xs font-medium border border-indigo-500/30 transition-all flex items-center justify-between"
-                            >
-                              <span className="flex items-center gap-1.5">
-                                <Download className="w-3.5 h-3.5 text-cyan-400" /> {file.fileName}
-                              </span>
-                              <span className="text-[10px] font-mono text-slate-400">
-                                {(file.fileSize / 1024 / 1024).toFixed(1)} MB
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-[11px] text-slate-500">No binary file attached yet.</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Footer: Links */}
-                <div className="pt-3 border-t border-white/5 flex items-center justify-between text-xs">
-                  <Link
-                    to={`/products/${product.slug}`}
-                    className="text-indigo-400 hover:underline flex items-center gap-1"
-                  >
-                    View Product Page <ExternalLink className="w-3 h-3" />
-                  </Link>
-
-                  <span className="text-[10px] text-slate-500">
-                    Acquired {new Date(ent.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
+        {/* License Grid */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[1, 2].map((n) => (
+              <div key={n} className="glass-panel-3d rounded-3xl p-6 h-64 animate-pulse space-y-4">
+                <div className="h-6 bg-slate-800/60 rounded w-1/2" />
+                <div className="h-4 bg-slate-800/60 rounded w-3/4" />
+                <div className="h-10 bg-slate-800/60 rounded" />
               </div>
-            );
-          })}
-        </div>
-      )}
+            ))}
+          </div>
+        ) : entitlements.length === 0 ? (
+          <div className="glass-panel-3d rounded-3xl p-12 text-center space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-950/80 border border-indigo-500/30 flex items-center justify-center mx-auto text-indigo-400">
+              <Key className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-bold text-white">No active software entitlements</h3>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              Explore the Marketplace catalog to acquire software license keys and developer tools.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {entitlements.map((ent) => {
+              const product = ent.product;
+              const latestVersion = product?.versions && product.versions.length > 0 ? product.versions[0] : null;
+
+              return (
+                <TiltCard key={ent.id}>
+                  <div className="glass-panel-3d rounded-3xl p-6 border border-white/10 space-y-5 h-full flex flex-col justify-between">
+                    
+                    <div className="space-y-4">
+                      {/* Product Header */}
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-slate-900 border border-white/10 overflow-hidden flex-shrink-0">
+                          <img src={product?.logoUrl} alt={product?.title} className="w-full h-full object-cover" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-white text-base font-display">{product?.title}</h3>
+                          <span className="text-xs text-cyan-400 font-medium">{product?.tagline}</span>
+                        </div>
+                      </div>
+
+                      {/* License Key Box */}
+                      <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-white/10 space-y-1">
+                        <div className="flex items-center justify-between text-[10px] text-slate-400">
+                          <span className="flex items-center gap-1 font-mono text-emerald-400">
+                            <ShieldCheck className="w-3.5 h-3.5" /> License Key
+                          </span>
+                          <span>Granted {new Date(ent.grantedAt || ent.createdAt).toLocaleDateString()}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2 pt-1">
+                          <code className="text-sm font-mono font-bold text-cyan-300 tracking-wider">
+                            {ent.licenseKey}
+                          </code>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(ent.licenseKey)}
+                            className="p-1.5 rounded-lg bg-indigo-950 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 transition-colors"
+                            title="Copy License Key"
+                          >
+                            {copiedKey === ent.licenseKey ? (
+                              <Check className="w-4 h-4 text-emerald-400" />
+                            ) : (
+                              <Copy className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Version & Download Files */}
+                      {latestVersion && (
+                        <div className="space-y-2">
+                          <span className="text-[11px] font-mono text-indigo-400 font-semibold block">
+                            Latest Binary Release: {latestVersion.versionNumber} ({latestVersion.releaseTitle})
+                          </span>
+
+                          <div className="space-y-1.5">
+                            {latestVersion.files && latestVersion.files.length > 0 ? (
+                              latestVersion.files.map((file) => (
+                                <button
+                                  key={file.id}
+                                  type="button"
+                                  onClick={() => handleDownloadFile(file.id, file.fileName)}
+                                  className="w-full p-2.5 rounded-xl bg-indigo-950/60 hover:bg-indigo-900/80 border border-indigo-500/30 text-xs font-mono text-cyan-300 flex items-center justify-between transition-colors group"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <FileCode className="w-4 h-4 text-cyan-400" /> {file.fileName}
+                                  </span>
+                                  <span className="flex items-center gap-1 text-slate-300 group-hover:text-white">
+                                    <Download className="w-3.5 h-3.5 text-emerald-400" /> Download Asset
+                                  </span>
+                                </button>
+                              ))
+                            ) : (
+                              <span className="text-[10px] text-slate-500 italic block">No downloadable binary files attached yet.</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="pt-3 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400">
+                      <span>Status: <strong className="text-emerald-400">{ent.status}</strong></span>
+                      <span>Plan: <strong className="text-white">{ent.pricingPlan?.name || 'Standard License'}</strong></span>
+                    </div>
+
+                  </div>
+                </TiltCard>
+              );
+            })}
+          </div>
+        )}
+
+      </div>
     </div>
   );
 };

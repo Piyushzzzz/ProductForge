@@ -1,563 +1,409 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Product, ProductStatus } from '../types/index.js';
 import { api } from '../services/api.js';
-import { useAuth } from '../context/AuthContext.js';
+import { Product, ProductStatus } from '../types/index.js';
 import { LifecycleBadge } from '../components/LifecycleBadge.js';
 import { TelemetryChart } from '../components/TelemetryChart.js';
-import {
-  LayoutDashboard,
-  PlusCircle,
-  TrendingUp,
-  DollarSign,
-  Download,
-  Users,
-  Eye,
-  Settings,
-  GitBranch,
-  Layers,
-  ArrowUpRight,
-  ShieldCheck,
-  Package,
-  Sparkles,
-  Edit,
-  Upload
+import { Lifecycle3DPipeline } from '../components/Lifecycle3DPipeline.js';
+import { Background3D } from '../components/Background3D.js';
+import { TiltCard } from '../components/TiltCard.js';
+import { 
+  Plus, Edit, Upload, Key, DollarSign, Download, Package, Activity, 
+  Sparkles, Layers, ArrowUpRight, ShieldCheck, FileText, CheckCircle2 
 } from 'lucide-react';
 
 export const CreatorDashboardPage: React.FC = () => {
-  const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
-  const [analytics, setAnalytics] = useState<any | null>(null);
+  const [analytics, setAnalytics] = useState<{
+    totalRevenue: number;
+    totalDownloads: number;
+    totalProducts: number;
+    activeLicenses: number;
+    monthlyRevenueTimeline: { date: string; value: number }[];
+    monthlyDownloadsTimeline: { date: string; value: number }[];
+  } | null>(null);
   const [customers, setCustomers] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'pipeline' | 'analytics' | 'customers' | 'releases'>('pipeline');
-  const [loading, setLoading] = useState<boolean>(true);
 
-  // New release modal state
-  const [showReleaseModal, setShowReleaseModal] = useState<boolean>(false);
-  const [selectedProductId, setSelectedProductId] = useState<string>('');
-  const [releaseVersion, setReleaseVersion] = useState<string>('v1.3.0');
-  const [releaseTitle, setReleaseTitle] = useState<string>('');
-  const [releaseNotes, setReleaseNotes] = useState<string>('');
-  const [releaseChangelog, setReleaseChangelog] = useState<string>('');
-  const [releaseFile, setReleaseFile] = useState<File | null>(null);
-  const [submittingRelease, setSubmittingRelease] = useState<boolean>(false);
+  const [filterStatus, setFilterStatus] = useState<ProductStatus | 'ALL'>('ALL');
+  const [loading, setLoading] = useState(true);
 
-  const fetchCreatorData = async () => {
+  // New Release Modal State
+  const [selectedProductForRelease, setSelectedProductForRelease] = useState<Product | null>(null);
+  const [versionNumber, setVersionNumber] = useState('v1.0.0');
+  const [releaseTitle, setReleaseTitle] = useState('');
+  const [releaseNotes, setReleaseNotes] = useState('');
+  const [fileToUpload, setFileToUpload] = useState<File | null>(null);
+  const [publishing, setPublishing] = useState(false);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
     setLoading(true);
     try {
       const [prodRes, analyticsRes, custRes] = await Promise.all([
-        api.get('/products/my-products'),
+        api.get('/products/creator/my-products'),
         api.get('/analytics/creator/summary'),
         api.get('/entitlements/creator/customers')
       ]);
 
-      if (prodRes.data.success) {
-        setProducts(prodRes.data.data);
-        if (prodRes.data.data.length > 0) {
-          setSelectedProductId(prodRes.data.data[0].id);
-        }
-      }
-      if (analyticsRes.data.success) {
-        setAnalytics(analyticsRes.data.data);
-      }
-      if (custRes.data.success) {
-        setCustomers(custRes.data.data);
-      }
-    } catch (e) {
-      console.error('Error fetching creator dashboard:', e);
+      if (prodRes.data.success) setProducts(prodRes.data.data);
+      if (analyticsRes.data.success) setAnalytics(analyticsRes.data.data);
+      if (custRes.data.success) setCustomers(custRes.data.data);
+    } catch (err) {
+      console.error('Failed to load creator studio data', err);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchCreatorData();
-  }, []);
-
-  const handleUpdateStatus = async (productId: string, newStatus: ProductStatus) => {
-    try {
-      const res = await api.patch(`/products/${productId}/status`, { status: newStatus });
-      if (res.data.success) {
-        fetchCreatorData();
-      }
-    } catch (e) {
-      alert('Failed to update product status.');
-    }
-  };
-
-  const handleCreateRelease = async (e: React.FormEvent) => {
+  const handlePublishRelease = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedProductId || !releaseVersion || !releaseTitle) return;
+    if (!selectedProductForRelease) return;
 
-    setSubmittingRelease(true);
+    setPublishing(true);
     try {
-      const res = await api.post(`/products/${selectedProductId}/releases`, {
-        versionNumber: releaseVersion,
+      const releaseRes = await api.post(`/releases/products/${selectedProductForRelease.id}`, {
+        versionNumber,
         releaseTitle,
-        releaseNotes,
-        changelog: releaseChangelog
+        releaseNotes
       });
 
-      if (res.data.success) {
-        const versionId = res.data.data.id;
-        // Upload file if selected
-        if (releaseFile) {
-          const formData = new FormData();
-          formData.append('file', releaseFile);
-          await api.post(`/releases/${versionId}/files`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-          });
-        }
-        setShowReleaseModal(false);
-        setReleaseTitle('');
-        setReleaseNotes('');
-        setReleaseChangelog('');
-        setReleaseFile(null);
-        fetchCreatorData();
+      if (releaseRes.data.success && fileToUpload) {
+        const versionId = releaseRes.data.data.id;
+        const formData = new FormData();
+        formData.append('file', fileToUpload);
+
+        await api.post(`/releases/${versionId}/upload`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
       }
-    } catch (e) {
-      alert('Failed to create release.');
+
+      alert('Release successfully published and customer notifications broadcasted!');
+      setSelectedProductForRelease(null);
+      setFileToUpload(null);
+      fetchData();
+    } catch (err: any) {
+      alert(err.response?.data?.error?.message || 'Release publish failed.');
     } finally {
-      setSubmittingRelease(false);
+      setPublishing(false);
     }
   };
 
-  // Group products by lifecycle state for pipeline
-  const draftProducts = products.filter((p) => p.status === 'DRAFT');
-  const betaProducts = products.filter((p) => p.status === 'BETA');
-  const publishedProducts = products.filter((p) => p.status === 'PUBLISHED');
-  const archivedProducts = products.filter((p) => p.status === 'ARCHIVED');
+  // Compute status counts for 3D pipeline
+  const statusCounts = {
+    DRAFT: products.filter(p => p.status === 'DRAFT').length,
+    BETA: products.filter(p => p.status === 'BETA').length,
+    PUBLISHED: products.filter(p => p.status === 'PUBLISHED').length,
+    ARCHIVED: products.filter(p => p.status === 'ARCHIVED').length
+  };
 
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-20 animate-pulse space-y-6">
-        <div className="h-8 bg-slate-900 rounded-xl w-1/4"></div>
-        <div className="h-96 bg-slate-900 rounded-3xl"></div>
-      </div>
-    );
-  }
+  const filteredProducts = filterStatus === 'ALL'
+    ? products
+    : products.filter(p => p.status === filterStatus);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Studio Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-cyan-400 bg-cyan-950/80 px-2.5 py-0.5 rounded-lg border border-cyan-500/30">
-              CREATOR STUDIO
-            </span>
-            <span className="text-xs text-slate-400">• {products.length} Total Software Products</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black font-display text-white mt-1">
-            Product Lifecycle Management
-          </h1>
-        </div>
+    <div className="relative min-h-screen">
+      {/* 3D WebGL Background */}
+      <Background3D />
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowReleaseModal(true)}
-            className="px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold text-xs shadow-cyanGlow transition-all flex items-center gap-1.5"
-          >
-            <GitBranch className="w-4 h-4" /> Publish Release
-          </button>
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20 space-y-10">
+        
+        {/* Header Title */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-panel-3d border border-cyan-500/30 text-cyan-300 text-xs font-semibold shadow-glow-cyan mb-2">
+              <Sparkles className="w-3.5 h-3.5" /> ProductForge Creator Studio
+            </div>
+            <h1 className="text-3xl font-extrabold font-display text-white">Software Lifecycle Studio</h1>
+            <p className="text-xs text-slate-400">Manage releases, view telemetry analytics, and issue customer licenses</p>
+          </div>
+
           <Link
             to="/creator/products/new"
-            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-glow transition-all flex items-center gap-1.5"
+            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-semibold text-xs shadow-glow-indigo transition-all flex items-center justify-center gap-2 self-start md:self-auto"
           >
-            <PlusCircle className="w-4 h-4 text-cyan-300" /> New Product
+            <Plus className="w-4 h-4" /> Create New Digital Product
           </Link>
         </div>
-      </div>
 
-      {/* Top Stat Telemetry Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="glass-panel p-5 rounded-2xl border border-white/10 relative overflow-hidden">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-mono uppercase">Gross Revenue</span>
-            <DollarSign className="w-4 h-4 text-emerald-400" />
-          </div>
-          <p className="text-2xl font-black font-display text-white">
-            ${analytics?.totalRevenue.toLocaleString() || '0.00'}
-          </p>
-          <span className="text-[10px] text-emerald-400 font-medium mt-1 block">Verified Marketplace Sales</span>
-        </div>
-
-        <div className="glass-panel p-5 rounded-2xl border border-white/10 relative overflow-hidden">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-mono uppercase">Total Customers</span>
-            <Users className="w-4 h-4 text-indigo-400" />
-          </div>
-          <p className="text-2xl font-black font-display text-white">
-            {analytics?.totalPurchases || 0}
-          </p>
-          <span className="text-[10px] text-indigo-300 font-medium mt-1 block">Active License Holders</span>
-        </div>
-
-        <div className="glass-panel p-5 rounded-2xl border border-white/10 relative overflow-hidden">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-mono uppercase">Binary Downloads</span>
-            <Download className="w-4 h-4 text-cyan-400" />
-          </div>
-          <p className="text-2xl font-black font-display text-cyan-400">
-            {analytics?.totalDownloads || 0}
-          </p>
-          <span className="text-[10px] text-cyan-300 font-medium mt-1 block">Protected Delivery Streams</span>
-        </div>
-
-        <div className="glass-panel p-5 rounded-2xl border border-white/10 relative overflow-hidden">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-mono uppercase">Conversion Rate</span>
-            <TrendingUp className="w-4 h-4 text-amber-400" />
-          </div>
-          <p className="text-2xl font-black font-display text-amber-400">
-            {analytics?.conversionRate || '0.0%'}
-          </p>
-          <span className="text-[10px] text-slate-400 font-medium mt-1 block">
-            {analytics?.totalViews || 0} Telemetry Impressions
-          </span>
-        </div>
-      </div>
-
-      {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-white/10 pb-4">
-        <button
-          onClick={() => setActiveTab('pipeline')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all ${
-            activeTab === 'pipeline'
-              ? 'bg-indigo-600 text-white shadow-glow'
-              : 'glass-panel text-slate-400 hover:text-white'
-          }`}
-        >
-          <Layers className="w-3.5 h-3.5" /> Product Lifecycle Pipeline
-        </button>
-        <button
-          onClick={() => setActiveTab('analytics')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all ${
-            activeTab === 'analytics'
-              ? 'bg-indigo-600 text-white shadow-glow'
-              : 'glass-panel text-slate-400 hover:text-white'
-          }`}
-        >
-          <TrendingUp className="w-3.5 h-3.5" /> Revenue & Telemetry Charts
-        </button>
-        <button
-          onClick={() => setActiveTab('customers')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all ${
-            activeTab === 'customers'
-              ? 'bg-indigo-600 text-white shadow-glow'
-              : 'glass-panel text-slate-400 hover:text-white'
-          }`}
-        >
-          <Users className="w-3.5 h-3.5" /> Customer License Entitlements ({customers.length})
-        </button>
-      </div>
-
-      {/* TAB 1: PRODUCT LIFECYCLE PIPELINE (Design B Studio Matrix) */}
-      {activeTab === 'pipeline' && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Column 1: DRAFT */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-amber-500/30">
-              <span className="text-xs font-mono font-bold text-amber-400">1. DRAFT ({draftProducts.length})</span>
-              <span className="text-[10px] text-slate-500">In Development</span>
+        {/* Top 4 Telemetry Metric Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <TiltCard>
+            <div className="glass-panel-3d rounded-2xl p-5 border border-white/10 space-y-2">
+              <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
+                <span>Total Gross Sales</span>
+                <DollarSign className="w-4 h-4 text-emerald-400" />
+              </div>
+              <p className="text-2xl font-bold font-mono text-white">
+                ${analytics ? analytics.totalRevenue.toFixed(2) : '0.00'}
+              </p>
+              <p className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" /> Real-time sandbox payouts
+              </p>
             </div>
+          </TiltCard>
 
-            <div className="space-y-3">
-              {draftProducts.length === 0 ? (
-                <div className="p-4 rounded-2xl bg-slate-900/40 border border-dashed border-white/10 text-center text-xs text-slate-500">
-                  No draft products
+          <TiltCard>
+            <div className="glass-panel-3d rounded-2xl p-5 border border-white/10 space-y-2">
+              <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
+                <span>Binary Downloads</span>
+                <Download className="w-4 h-4 text-cyan-400" />
+              </div>
+              <p className="text-2xl font-bold font-mono text-cyan-300">
+                {analytics ? analytics.totalDownloads : 0}
+              </p>
+              <p className="text-[10px] text-slate-400">Entitlement verified streams</p>
+            </div>
+          </TiltCard>
+
+          <TiltCard>
+            <div className="glass-panel-3d rounded-2xl p-5 border border-white/10 space-y-2">
+              <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
+                <span>Active Customer Licenses</span>
+                <Key className="w-4 h-4 text-indigo-400" />
+              </div>
+              <p className="text-2xl font-bold font-mono text-indigo-300">
+                {analytics ? analytics.activeLicenses : 0}
+              </p>
+              <p className="text-[10px] text-indigo-400 font-medium">PF-XXXX-XXXX issued</p>
+            </div>
+          </TiltCard>
+
+          <TiltCard>
+            <div className="glass-panel-3d rounded-2xl p-5 border border-white/10 space-y-2">
+              <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
+                <span>Active Products</span>
+                <Package className="w-4 h-4 text-amber-400" />
+              </div>
+              <p className="text-2xl font-bold font-mono text-white">
+                {analytics ? analytics.totalProducts : 0}
+              </p>
+              <p className="text-[10px] text-slate-400">Drafts & Live catalog</p>
+            </div>
+          </TiltCard>
+        </div>
+
+        {/* Telemetry Revenue & Download Graphs */}
+        {analytics && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <TiltCard>
+              <div className="glass-panel-3d rounded-3xl p-6 border border-white/10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-white text-sm font-display flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-indigo-400" /> Monthly Revenue Timeline ($)
+                  </h3>
+                  <span className="text-[10px] text-indigo-400 font-mono">Live Ingestion</span>
                 </div>
-              ) : (
-                draftProducts.map((p) => (
-                  <div key={p.id} className="glass-panel p-4 rounded-2xl border border-white/10 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-bold text-white truncate">{p.title}</h4>
-                      <Link to={`/creator/products/${p.id}/edit`} className="text-slate-400 hover:text-white">
-                        <Edit className="w-3 h-3" />
-                      </Link>
-                    </div>
-                    <p className="text-[11px] text-slate-400 line-clamp-2">{p.tagline}</p>
-                    <div className="pt-2 border-t border-white/5 flex items-center justify-between">
-                      <button
-                        onClick={() => handleUpdateStatus(p.id, 'BETA')}
-                        className="text-[10px] font-semibold text-indigo-300 hover:underline"
-                      >
-                        Promote to Beta →
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+                <TelemetryChart data={analytics.monthlyRevenueTimeline} color="#6366F1" />
+              </div>
+            </TiltCard>
 
-          {/* Column 2: BETA */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-indigo-500/30">
-              <span className="text-xs font-mono font-bold text-indigo-400">2. BETA ({betaProducts.length})</span>
-              <span className="text-[10px] text-slate-500">Testing & Feedback</span>
-            </div>
-
-            <div className="space-y-3">
-              {betaProducts.length === 0 ? (
-                <div className="p-4 rounded-2xl bg-slate-900/40 border border-dashed border-white/10 text-center text-xs text-slate-500">
-                  No beta products
+            <TiltCard>
+              <div className="glass-panel-3d rounded-3xl p-6 border border-white/10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-white text-sm font-display flex items-center gap-2">
+                    <Download className="w-4 h-4 text-cyan-400" /> Monthly Binary Downloads
+                  </h3>
+                  <span className="text-[10px] text-cyan-400 font-mono">Live Ingestion</span>
                 </div>
-              ) : (
-                betaProducts.map((p) => (
-                  <div key={p.id} className="glass-panel p-4 rounded-2xl border border-indigo-500/30 bg-indigo-950/20 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-bold text-white truncate">{p.title}</h4>
-                      <Link to={`/creator/products/${p.id}/edit`} className="text-slate-400 hover:text-white">
-                        <Edit className="w-3 h-3" />
-                      </Link>
-                    </div>
-                    <p className="text-[11px] text-slate-400 line-clamp-2">{p.tagline}</p>
-                    <div className="pt-2 border-t border-white/5 flex items-center justify-between">
-                      <button
-                        onClick={() => handleUpdateStatus(p.id, 'DRAFT')}
-                        className="text-[10px] text-slate-500 hover:text-slate-400"
-                      >
-                        ← Revert
-                      </button>
-                      <button
-                        onClick={() => handleUpdateStatus(p.id, 'PUBLISHED')}
-                        className="text-[10px] font-semibold text-emerald-400 hover:underline"
-                      >
-                        Publish Live →
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+                <TelemetryChart data={analytics.monthlyDownloadsTimeline} color="#22D3EE" />
+              </div>
+            </TiltCard>
+          </div>
+        )}
+
+        {/* 3D Interactive Lifecycle Pipeline */}
+        <div className="glass-panel-3d rounded-3xl p-6 border border-white/10">
+          <Lifecycle3DPipeline
+            activeStatus={filterStatus}
+            onStatusChange={(st) => setFilterStatus(st)}
+            counts={statusCounts}
+          />
+        </div>
+
+        {/* Product Catalog List */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-white text-base font-display">Your Software Catalog</h3>
+            <span className="text-xs text-slate-400">Showing {filteredProducts.length} products</span>
           </div>
 
-          {/* Column 3: PUBLISHED */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-emerald-500/30">
-              <span className="text-xs font-mono font-bold text-emerald-400">3. PUBLISHED ({publishedProducts.length})</span>
-              <span className="text-[10px] text-slate-500">Live on Market</span>
-            </div>
+          <div className="space-y-3">
+            {filteredProducts.length === 0 ? (
+              <div className="glass-panel-3d rounded-2xl p-8 text-center text-xs text-slate-400">
+                No products found in stage <span className="font-mono text-cyan-300">{filterStatus}</span>.
+              </div>
+            ) : (
+              filteredProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className="glass-panel-3d rounded-2xl p-5 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-indigo-500/40 transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-slate-900 border border-white/10 overflow-hidden flex-shrink-0">
+                      <img src={product.logoUrl} alt={product.title} className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-white text-sm font-display">{product.title}</h4>
+                        <LifecycleBadge status={product.status} />
+                      </div>
+                      <p className="text-xs text-slate-400 line-clamp-1">{product.tagline}</p>
+                      <div className="flex items-center gap-3 text-[10px] text-slate-500 font-mono mt-1">
+                        <span>Category: {product.category?.name}</span>
+                        <span>•</span>
+                        <span>Orders: {product._count?.orderItems || 0}</span>
+                        <span>•</span>
+                        <span>Entitlements: {product._count?.entitlements || 0}</span>
+                      </div>
+                    </div>
+                  </div>
 
-            <div className="space-y-3">
-              {publishedProducts.map((p) => (
-                <div key={p.id} className="glass-panel p-4 rounded-2xl border border-emerald-500/30 bg-emerald-950/10 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-white truncate">{p.title}</h4>
-                    <Link to={`/products/${p.slug}`} className="text-slate-400 hover:text-cyan-400">
-                      <ArrowUpRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] text-slate-400">
-                    <span>{p.totalPurchases} sales</span>
-                    <span className="text-amber-400">★ {p.averageRating}</span>
-                  </div>
-                  <div className="pt-2 border-t border-white/5 flex items-center justify-between">
+                  <div className="flex items-center gap-2 self-end md:self-auto">
                     <button
-                      onClick={() => handleUpdateStatus(p.id, 'ARCHIVED')}
-                      className="text-[10px] text-slate-500 hover:text-red-400"
+                      onClick={() => setSelectedProductForRelease(product)}
+                      className="px-3 py-2 rounded-xl bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 text-xs font-semibold transition-colors flex items-center gap-1.5"
                     >
-                      Archive
+                      <Upload className="w-3.5 h-3.5 text-cyan-400" /> Publish Release
                     </button>
+
                     <Link
-                      to={`/creator/products/${p.id}/edit`}
-                      className="text-[10px] font-semibold text-cyan-400 hover:underline"
+                      to={`/creator/products/${product.id}/edit`}
+                      className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/10 transition-colors"
+                      title="Edit Product"
                     >
-                      Manage Releases →
+                      <Edit className="w-4 h-4" />
                     </Link>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Column 4: ARCHIVED */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-500/30">
-              <span className="text-xs font-mono font-bold text-slate-400">4. ARCHIVED ({archivedProducts.length})</span>
-              <span className="text-[10px] text-slate-500">End-of-Life</span>
-            </div>
-
-            <div className="space-y-3">
-              {archivedProducts.length === 0 ? (
-                <div className="p-4 rounded-2xl bg-slate-900/40 border border-dashed border-white/10 text-center text-xs text-slate-500">
-                  No archived products
-                </div>
-              ) : (
-                archivedProducts.map((p) => (
-                  <div key={p.id} className="glass-panel p-4 rounded-2xl border border-white/10 opacity-70 space-y-2">
-                    <h4 className="text-xs font-bold text-white truncate">{p.title}</h4>
-                    <button
-                      onClick={() => handleUpdateStatus(p.id, 'DRAFT')}
-                      className="text-[10px] text-indigo-400 hover:underline"
-                    >
-                      Restore to Draft
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
+              ))
+            )}
           </div>
         </div>
-      )}
 
-      {/* TAB 2: ANALYTICS & TELEMETRY CHARTS */}
-      {activeTab === 'analytics' && analytics && (
-        <div className="space-y-8">
-          <TelemetryChart data={analytics.telemetryTimeline} />
-        </div>
-      )}
-
-      {/* TAB 3: CUSTOMER LICENSE ENTITLEMENTS TABLE */}
-      {activeTab === 'customers' && (
-        <div className="glass-panel rounded-3xl p-6 border border-white/10 overflow-hidden">
-          <h3 className="text-base font-bold font-display text-white mb-4">
-            Customer License Registry
-          </h3>
+        {/* Customer License Key Registry */}
+        <div className="glass-panel-3d rounded-3xl p-6 border border-white/10 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-white text-base font-display flex items-center gap-2">
+              <Key className="w-4 h-4 text-cyan-400" /> Customer License Entitlement Registry
+            </h3>
+            <span className="text-xs text-slate-400 font-mono">{customers.length} Active Licenses</span>
+          </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-white/10 text-slate-400 uppercase font-mono text-[10px]">
-                  <th className="pb-3">Customer</th>
-                  <th className="pb-3">Software Product</th>
-                  <th className="pb-3">License Plan</th>
-                  <th className="pb-3">License Key</th>
-                  <th className="pb-3">Status</th>
-                  <th className="pb-3">Issued Date</th>
+              <thead className="bg-slate-900/80 text-slate-400 font-mono text-[10px] uppercase border-b border-white/10">
+                <tr>
+                  <th className="p-3">Customer Name</th>
+                  <th className="p-3">Email</th>
+                  <th className="p-3">Licensed Product</th>
+                  <th className="p-3">License Key</th>
+                  <th className="p-3">Issued Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
-                {customers.map((c) => (
-                  <tr key={c.id} className="hover:bg-white/5 transition-colors">
-                    <td className="py-3.5 font-medium text-white flex items-center gap-2">
-                      <img
-                        src={c.customer?.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=' + c.customer?.name}
-                        alt=""
-                        className="w-6 h-6 rounded-full border border-white/10"
-                      />
-                      <span>{c.customer?.name}</span>
-                    </td>
-                    <td className="py-3.5 text-slate-300">{c.product?.title}</td>
-                    <td className="py-3.5 font-mono text-cyan-300">{c.orderItem?.pricingPlan?.name || 'Standard'}</td>
-                    <td className="py-3.5 font-mono text-indigo-300 bg-slate-900/60 px-2 py-0.5 rounded border border-white/5 inline-block">
-                      {c.licenseKey}
-                    </td>
-                    <td className="py-3.5">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                        {c.status}
-                      </span>
-                    </td>
-                    <td className="py-3.5 text-slate-400">
-                      {new Date(c.createdAt).toLocaleDateString()}
+              <tbody className="divide-y divide-white/5 font-mono">
+                {customers.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-4 text-center text-slate-500">
+                      No licenses issued yet.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  customers.map((c, i) => (
+                    <tr key={i} className="hover:bg-white/5 transition-colors">
+                      <td className="p-3 font-semibold text-white">{c.customerName}</td>
+                      <td className="p-3 text-slate-400">{c.customerEmail}</td>
+                      <td className="p-3 text-indigo-300">{c.productTitle}</td>
+                      <td className="p-3 text-cyan-300 font-mono font-bold">{c.licenseKey}</td>
+                      <td className="p-3 text-slate-500">{new Date(c.grantedAt).toLocaleDateString()}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
-      )}
 
-      {/* Create Release Modal */}
-      {showReleaseModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="glass-panel w-full max-w-lg rounded-3xl p-6 shadow-2xl relative border border-white/10 animate-in fade-in">
-            <h3 className="text-lg font-bold font-display text-white mb-1">
-              Publish New Version Release
-            </h3>
-            <p className="text-xs text-slate-400 mb-5">
-              Distribute updates, attach software binaries, and push notifications to customers.
-            </p>
+      </div>
 
-            <form onSubmit={handleCreateRelease} className="space-y-4 text-xs">
+      {/* Release Publisher Modal */}
+      {selectedProductForRelease && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="glass-panel-3d w-full max-w-lg rounded-3xl p-6 border border-white/15 shadow-2xl space-y-5 relative">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <h3 className="text-base font-bold text-white font-display">
+                Publish Release for {selectedProductForRelease.title}
+              </h3>
+              <button
+                onClick={() => setSelectedProductForRelease(null)}
+                className="text-slate-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handlePublishRelease} className="space-y-4 text-xs">
               <div>
-                <label className="text-slate-300 font-medium block mb-1">Select Software Product</label>
-                <select
-                  value={selectedProductId}
-                  onChange={(e) => setSelectedProductId(e.target.value)}
-                  className="w-full p-2.5 rounded-xl glass-input text-white"
-                >
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id} className="bg-slate-900">
-                      {p.title} ({p.status})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-slate-300 font-medium block mb-1">Version Number (SemVer)</label>
-                  <input
-                    type="text"
-                    value={releaseVersion}
-                    onChange={(e) => setReleaseVersion(e.target.value)}
-                    placeholder="e.g. v1.3.0"
-                    className="w-full p-2.5 rounded-xl glass-input font-mono"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-slate-300 font-medium block mb-1">Release Title</label>
-                  <input
-                    type="text"
-                    value={releaseTitle}
-                    onChange={(e) => setReleaseTitle(e.target.value)}
-                    placeholder="e.g. Performance & Security Patch"
-                    className="w-full p-2.5 rounded-xl glass-input"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-slate-300 font-medium block mb-1">Release Notes</label>
-                <textarea
-                  rows={2}
-                  value={releaseNotes}
-                  onChange={(e) => setReleaseNotes(e.target.value)}
-                  placeholder="Summary of improvements for users..."
-                  className="w-full p-2.5 rounded-xl glass-input"
+                <label className="text-slate-300 font-medium block mb-1">SemVer Version Number</label>
+                <input
+                  type="text"
+                  placeholder="v1.1.0"
+                  value={versionNumber}
+                  onChange={(e) => setVersionNumber(e.target.value)}
+                  className="w-full p-3 rounded-xl glass-input-3d text-white font-mono"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-slate-300 font-medium block mb-1">Changelog (Markdown)</label>
-                <textarea
-                  rows={3}
-                  value={releaseChangelog}
-                  onChange={(e) => setReleaseChangelog(e.target.value)}
-                  placeholder="- ✨ Added new feature&#10;- ⚡ Improved latency&#10;- 🐛 Fixed bug"
-                  className="w-full p-2.5 rounded-xl glass-input font-mono text-[11px]"
+                <label className="text-slate-300 font-medium block mb-1">Release Title</label>
+                <input
+                  type="text"
+                  placeholder="Major Feature Update & Performance Boost"
+                  value={releaseTitle}
+                  onChange={(e) => setReleaseTitle(e.target.value)}
+                  className="w-full p-3 rounded-xl glass-input-3d text-white"
+                  required
                 />
               </div>
 
               <div>
-                <label className="text-slate-300 font-medium block mb-1">Upload Binary / ZIP Asset</label>
-                <input
-                  type="file"
-                  onChange={(e) => setReleaseFile(e.target.files ? e.target.files[0] : null)}
-                  className="w-full p-2 rounded-xl glass-input text-slate-400 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer"
+                <label className="text-slate-300 font-medium block mb-1">Release Notes & Changelog</label>
+                <textarea
+                  rows={3}
+                  placeholder="- Added WebSocket notification pipeline&#10;- Fixed entitlement access bug"
+                  value={releaseNotes}
+                  onChange={(e) => setReleaseNotes(e.target.value)}
+                  className="w-full p-3 rounded-xl glass-input-3d text-white font-mono"
+                  required
                 />
               </div>
 
-              <div className="pt-3 flex items-center justify-end gap-3">
+              <div>
+                <label className="text-slate-300 font-medium block mb-1">Upload Binary Asset (.zip, .exe, .tar.gz)</label>
+                <input
+                  type="file"
+                  onChange={(e) => setFileToUpload(e.target.files ? e.target.files[0] : null)}
+                  className="w-full p-2 rounded-xl glass-input-3d text-slate-300 text-xs"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setShowReleaseModal(false)}
-                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 font-medium"
+                  onClick={() => setSelectedProductForRelease(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-white/10"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={submittingRelease}
-                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold shadow-glow"
+                  disabled={publishing}
+                  className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow-glow-indigo transition-all"
                 >
-                  {submittingRelease ? 'Publishing...' : 'Publish Release Now'}
+                  {publishing ? 'Publishing...' : 'Publish Release & Broadcast'}
                 </button>
               </div>
             </form>
