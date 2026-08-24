@@ -8,9 +8,10 @@ import { Star, ShieldCheck, ArrowRight, Download, Eye, Sparkles } from 'lucide-r
 interface ProductCardProps {
   product: Product;
   onQuickBuy?: (product: Product) => void;
+  onCategoryClick?: (categoryId: string) => void;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickBuy }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickBuy, onCategoryClick }) => {
   const lowestPrice = product.pricingPlans && product.pricingPlans.length > 0
     ? Math.min(...product.pricingPlans.map(p => p.price))
     : 0;
@@ -32,9 +33,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickBuy })
           <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
             <LifecycleBadge status={product.status} />
             {product.category && (
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-900/80 backdrop-blur-md text-cyan-300 border border-cyan-500/30">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onCategoryClick && product.category) onCategoryClick(product.category.id);
+                }}
+                className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-900/80 backdrop-blur-md text-cyan-300 border border-cyan-500/30 hover:border-cyan-400 hover:text-white transition-all cursor-pointer"
+              >
                 {product.category.name}
-              </span>
+              </button>
             )}
           </div>
 

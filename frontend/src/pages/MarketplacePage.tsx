@@ -195,6 +195,7 @@ export const MarketplacePage: React.FC = () => {
                   key={product.id}
                   product={product}
                   onQuickBuy={(prod) => setCheckoutProduct(prod)}
+                  onCategoryClick={(catId) => setSelectedCategory(catId)}
                 />
               ))}
             </div>

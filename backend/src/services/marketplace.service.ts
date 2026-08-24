@@ -12,22 +12,33 @@ export class MarketplaceService {
     const limit = Math.min(50, filters.limit || 12);
     const skip = (page - 1) * limit;
 
-    const where: any = {
-      status: { in: ['PUBLISHED', 'BETA'] }
-    };
+    const AND: any[] = [
+      { status: { in: ['PUBLISHED', 'BETA'] } }
+    ];
 
-    if (filters.category && filters.category !== 'all') {
-      where.category = { slug: filters.category };
+    if (filters.category && filters.category !== 'all' && filters.category.trim()) {
+      const catQuery = filters.category.trim();
+      AND.push({
+        OR: [
+          { categoryId: catQuery },
+          { category: { slug: catQuery } },
+          { category: { name: { contains: catQuery } } }
+        ]
+      });
     }
 
     if (filters.search && filters.search.trim()) {
       const q = filters.search.trim();
-      where.OR = [
-        { title: { contains: q } },
-        { tagline: { contains: q } },
-        { description: { contains: q } }
-      ];
+      AND.push({
+        OR: [
+          { title: { contains: q } },
+          { tagline: { contains: q } },
+          { description: { contains: q } }
+        ]
+      });
     }
+
+    const where: any = { AND };
 
     let orderBy: any = { createdAt: 'desc' };
     if (filters.sortBy === 'popular') orderBy = { totalPurchases: 'desc' };
