@@ -1,0 +1,15 @@
+# Normalize line endings to LF in the repository (cross-platform consistency)
+* text=auto eol=lf
+
+# Force binary files to remain binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.db binary
+*.zip binary
+*.tar.gz binary
+*.exe binary
+*.dmg binary
+*.apk binary

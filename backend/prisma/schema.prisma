@@ -1,0 +1,215 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String          @id @default(cuid())
+  email        String          @unique
+  passwordHash String
+  name         String
+  role         String          @default("CUSTOMER") // CUSTOMER, CREATOR, ADMIN
+  avatarUrl    String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  creatorProfile CreatorProfile?
+  products       Product[]       @relation("CreatorProducts")
+  orders         Order[]
+  entitlements   Entitlement[]
+  reviews        Review[]
+  notifications  Notification[]
+  analyticsEvents AnalyticsEvent[]
+}
+
+model CreatorProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio           String?
+  website       String?
+  githubUrl     String?
+  payoutDetails String?
+  rating        Float    @default(0.0)
+  totalSales    Float    @default(0.0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  icon        String
+  description String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id             String           @id @default(cuid())
+  creatorId      String
+  creator        User             @relation("CreatorProducts", fields: [creatorId], references: [id], onDelete: Cascade)
+  categoryId     String
+  category       Category         @relation(fields: [categoryId], references: [id])
+  title          String
+  slug           String           @unique
+  tagline        String
+  description    String
+  status         String           @default("DRAFT") // DRAFT, BETA, PUBLISHED, ARCHIVED
+  demoUrl        String?
+  githubRepo     String?
+  logoUrl        String?
+  bannerUrl      String?
+  averageRating  Float            @default(0.0)
+  totalReviews   Int              @default(0)
+  totalPurchases Int              @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  pricingPlans   PricingPlan[]
+  versions       ProductVersion[]
+  orderItems     OrderItem[]
+  entitlements   Entitlement[]
+  reviews        Review[]
+  analyticsEvents AnalyticsEvent[]
+}
+
+model PricingPlan {
+  id          String      @id @default(cuid())
+  productId   String
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name        String      // Starter, Pro, Lifetime, Enterprise
+  type        String      // ONE_TIME, RECURRING
+  price       Float
+  interval    String      @default("NONE") // MONTHLY, YEARLY, NONE
+  features    String      // JSON string array of features
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  orderItems  OrderItem[]
+}
+
+model ProductVersion {
+  id            String        @id @default(cuid())
+  productId     String
+  product       Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  versionNumber String        // e.g. "v1.0.0", "v1.2.0"
+  releaseTitle  String
+  releaseNotes  String
+  changelog     String
+  isBeta        Boolean       @default(false)
+  isCurrent     Boolean       @default(true)
+  publishedAt   DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  files         ProductFile[]
+}
+
+model ProductFile {
+  id          String         @id @default(cuid())
+  versionId   String
+  version     ProductVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  fileName    String
+  fileSize    Int
+  mimeType    String
+  storagePath String
+  checksum    String
+  createdAt   DateTime       @default(now())
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  customerId  String
+  customer    User        @relation(fields: [customerId], references: [id])
+  orderNumber String      @unique
+  totalAmount Float
+  status      String      @default("PENDING") // PENDING, COMPLETED, FAILED, REFUNDED
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  items       OrderItem[]
+  payment     Payment?
+}
+
+model OrderItem {
+  id            String       @id @default(cuid())
+  orderId       String
+  order         Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product      @relation(fields: [productId], references: [id])
+  pricingPlanId String
+  pricingPlan   PricingPlan  @relation(fields: [pricingPlanId], references: [id])
+  price         Float
+  createdAt     DateTime     @default(now())
+
+  entitlement   Entitlement?
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  orderId       String   @unique
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  transactionId String   @unique
+  provider      String   @default("SANDBOX")
+  status        String   @default("COMPLETED") // PENDING, COMPLETED, FAILED
+  amount        Float
+  verifiedAt    DateTime @default(now())
+  createdAt     DateTime @default(now())
+}
+
+model Entitlement {
+  id          String     @id @default(cuid())
+  customerId  String
+  customer    User       @relation(fields: [customerId], references: [id])
+  productId   String
+  product     Product    @relation(fields: [productId], references: [id])
+  orderItemId String?    @unique
+  orderItem   OrderItem? @relation(fields: [orderItemId], references: [id])
+  licenseKey  String     @unique
+  status      String     @default("ACTIVE") // ACTIVE, SUSPENDED, EXPIRED
+  expiresAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   User     @relation(fields: [customerId], references: [id])
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rating     Int      // 1 to 5
+  comment    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  eventType String   // PRODUCT_VIEW, PRODUCT_PURCHASE, PRODUCT_DOWNLOAD, RELEASE_VIEW
+  metadata  String?  // JSON string
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   // INFO, SUCCESS, WARNING, RELEASE, PURCHASE, REVIEW
+  isRead    Boolean  @default(false)
+  linkUrl   String?
+  createdAt DateTime @default(now())
+}
