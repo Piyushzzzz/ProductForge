@@ -73,10 +73,35 @@ async function runTests() {
       if (data.data.products.length === 0) throw new Error('No products returned');
     });
 
-    await test('Module 3: Marketplace Categories', async () => {
+    await test('Module 3: Marketplace Categories (/marketplace/categories)', async () => {
       const res = await fetch(`${baseUrl}/marketplace/categories`);
       const data = await res.json() as any;
       if (!data.success || data.data.length === 0) throw new Error('Categories query failed');
+    });
+
+    await test('Module 3: Product Categories Root (/categories)', async () => {
+      const res = await fetch(`${baseUrl}/categories`);
+      const data = await res.json() as any;
+      if (!data.success || data.data.length === 0) throw new Error('/categories query failed');
+    });
+
+    let createdCategory: any = null;
+    await test('Module 3: Create Category via POST /categories', async () => {
+      const res = await fetch(`${baseUrl}/categories`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${creatorToken}`
+        },
+        body: JSON.stringify({
+          name: `Automated Test Category ${Date.now()}`,
+          description: 'Testing dynamic category generation',
+          icon: 'Sparkles'
+        })
+      });
+      const data = await res.json() as any;
+      if (!data.success || !data.data?.id) throw new Error('Create category failed');
+      createdCategory = data.data;
     });
 
     // 4. Product Details by Slug
@@ -131,6 +156,64 @@ async function runTests() {
       });
       const data = await res.json() as any;
       if (!data.success || !Array.isArray(data.data)) throw new Error('Notification feed failed');
+    });
+
+    // 9. Module 4: Version Comparison & Diffing
+    await test('Module 4: Version Comparison & Diffing Engine', async () => {
+      const res = await fetch(`${baseUrl}/releases/products/${sampleProduct.id}/compare`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          newVersionNumber: 'v2.0.0',
+          newReleaseTitle: 'Version 2.0 Architectural Overhaul',
+          newReleaseNotes: 'Refactored APIs\nAdded WebSocket streaming'
+        })
+      });
+      const data = await res.json() as any;
+      if (!data.success || !data.data.semverDiff) throw new Error('Version compare failed');
+      if (data.data.semverDiff.bumpType !== 'MAJOR') throw new Error('SemVer bump detection failed');
+    });
+
+    // 10. Module 4: Version Rollback Engine
+    await test('Module 4: Version Rollback Capability', async () => {
+      // 1. Create a new release v1.9.9
+      const createRes = await fetch(`${baseUrl}/releases/products/${sampleProduct.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${creatorToken}`
+        },
+        body: JSON.stringify({
+          versionNumber: 'v1.9.9',
+          releaseTitle: 'Experimental Release',
+          releaseNotes: 'Testing rollback capability'
+        })
+      });
+      const createData = await createRes.json() as any;
+      if (!createData.success) throw new Error('Failed to create test version: ' + JSON.stringify(createData));
+
+      // 2. Fetch releases to get previous stable version
+      const listRes = await fetch(`${baseUrl}/releases/products/${sampleProduct.id}`);
+      const listData = await listRes.json() as any;
+      const releases = listData.data || [];
+      const previousVersion = releases.find((r: any) => r.id !== createData.data.id);
+      if (!previousVersion) throw new Error('No previous version found to roll back to');
+
+      // 3. Execute Rollback to previous version
+      const rollbackRes = await fetch(`${baseUrl}/releases/products/${sampleProduct.id}/rollback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${creatorToken}`
+        },
+        body: JSON.stringify({
+          targetVersionId: previousVersion.id,
+          reason: 'Severe regression detected in testing.'
+        })
+      });
+      const rollbackData = await rollbackRes.json() as any;
+      if (!rollbackData.success) throw new Error('Rollback failed: ' + JSON.stringify(rollbackData));
+      if (!rollbackData.data.restoredVersion.isCurrent) throw new Error('Restored version is not marked isCurrent');
     });
 
     console.log(`\n🏁 Test Results: ${passed} passed, ${failed} failed.`);

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { api } from '../services/api.js';
 import { Category, ProductStatus } from '../types/index.js';
+import { AddCategoryModal } from '../components/AddCategoryModal.js';
 import { ArrowLeft, Save, Plus, Trash2, CheckCircle2 } from 'lucide-react';
 
 export const CreatorProductEditPage: React.FC = () => {
@@ -10,6 +11,7 @@ export const CreatorProductEditPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [categories, setCategories] = useState<Category[]>([]);
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [tagline, setTagline] = useState('');
   const [description, setDescription] = useState('');
@@ -160,18 +162,32 @@ export const CreatorProductEditPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="text-slate-300 font-medium block mb-1.5">Category *</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-slate-300 font-medium">Category *</label>
+                <button
+                  type="button"
+                  onClick={() => setIsAddCategoryOpen(true)}
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-cyan-400 hover:text-cyan-300 hover:underline cursor-pointer"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>Add Category</span>
+                </button>
+              </div>
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
                 className="w-full p-3 rounded-xl glass-input text-white"
                 required
               >
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id} className="bg-slate-900 text-white">
-                    {c.name}
-                  </option>
-                ))}
+                {categories.length === 0 ? (
+                  <option value="">No categories available - Click "+ Add Category"</option>
+                ) : (
+                  categories.map((c) => (
+                    <option key={c.id} value={c.id} className="bg-slate-900 text-white">
+                      {c.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
           </div>
@@ -255,6 +271,18 @@ export const CreatorProductEditPage: React.FC = () => {
           </div>
         </form>
       </div>
+
+      <AddCategoryModal
+        isOpen={isAddCategoryOpen}
+        onClose={() => setIsAddCategoryOpen(false)}
+        onSuccess={(newCat) => {
+          setCategories(prev => {
+            const exists = prev.some(c => c.id === newCat.id);
+            return exists ? prev : [...prev, newCat];
+          });
+          setCategoryId(newCat.id);
+        }}
+      />
     </div>
   );
 };

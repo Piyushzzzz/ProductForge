@@ -3,8 +3,10 @@ import { api } from '../services/api.js';
 import { Product, Category } from '../types/index.js';
 import { ProductCard } from '../components/ProductCard.js';
 import { CheckoutModal } from '../components/CheckoutModal.js';
+import { ProjectPreviewModal } from '../components/ProjectPreviewModal.js';
 import { Background3D } from '../components/Background3D.js';
 import { Hero3DShowcase } from '../components/Hero3DShowcase.js';
+import { CategoryIcon } from '../components/CategoryIcon.js';
 import { Search, Filter, Sparkles, Layers, ShieldCheck, Zap, ArrowUpRight } from 'lucide-react';
 
 export const MarketplacePage: React.FC = () => {
@@ -16,6 +18,7 @@ export const MarketplacePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   const [checkoutProduct, setCheckoutProduct] = useState<Product | null>(null);
+  const [previewProduct, setPreviewProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     fetchCategories();
@@ -27,12 +30,20 @@ export const MarketplacePage: React.FC = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await api.get('/marketplace/categories');
+      const res = await api.get('/categories');
       if (res.data.success) {
         setCategories(res.data.data);
       }
     } catch (err) {
       console.error('Failed to load categories', err);
+      try {
+        const fallback = await api.get('/marketplace/categories');
+        if (fallback.data.success) {
+          setCategories(fallback.data.data);
+        }
+      } catch (e) {
+        console.error('Failed fallback categories', e);
+      }
     }
   };
 
@@ -125,13 +136,14 @@ export const MarketplacePage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedCategory('')}
-                className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
+                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
                   selectedCategory === ''
                     ? 'bg-gradient-to-r from-indigo-600 to-cyan-500 text-white border-cyan-400 shadow-glow-indigo'
                     : 'bg-slate-900/60 border-white/5 text-slate-400 hover:text-white hover:border-white/20'
                 }`}
               >
-                All Products
+                <Layers className="w-3.5 h-3.5" />
+                <span>All Products</span>
               </button>
 
               {categories.map((cat) => (
@@ -139,13 +151,14 @@ export const MarketplacePage: React.FC = () => {
                   key={cat.id}
                   type="button"
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
+                  className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
                     selectedCategory === cat.id
                       ? 'bg-gradient-to-r from-indigo-600 to-cyan-500 text-white border-cyan-400 shadow-glow-indigo'
                       : 'bg-slate-900/60 border-white/5 text-slate-400 hover:text-white hover:border-white/20'
                   }`}
                 >
-                  {cat.name}
+                  <CategoryIcon iconName={cat.icon} className="w-3.5 h-3.5" />
+                  <span>{cat.name}</span>
                 </button>
               ))}
             </div>
@@ -196,6 +209,7 @@ export const MarketplacePage: React.FC = () => {
                   product={product}
                   onQuickBuy={(prod) => setCheckoutProduct(prod)}
                   onCategoryClick={(catId) => setSelectedCategory(catId)}
+                  onPreview={(prod) => setPreviewProduct(prod)}
                 />
               ))}
             </div>
@@ -203,6 +217,15 @@ export const MarketplacePage: React.FC = () => {
         </div>
 
       </div>
+
+      {/* Project Preview Modal */}
+      {previewProduct && (
+        <ProjectPreviewModal
+          product={previewProduct}
+          onClose={() => setPreviewProduct(null)}
+          onQuickBuy={(prod) => setCheckoutProduct(prod)}
+        />
+      )}
 
       {/* Checkout Modal */}
       {checkoutProduct && (

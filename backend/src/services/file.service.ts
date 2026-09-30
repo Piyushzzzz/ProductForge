@@ -43,6 +43,30 @@ export class FileService {
       }
     }
 
+    // If external URL (e.g. GitHub release asset), return it directly for redirect
+    if (file.storagePath.startsWith('http://') || file.storagePath.startsWith('https://')) {
+      try {
+        await prisma.analyticsEvent.create({
+          data: {
+            productId,
+            userId: customerId,
+            eventType: 'PRODUCT_DOWNLOAD',
+            metadata: JSON.stringify({ fileId: file.id, fileName: file.fileName, version: file.version.versionNumber, externalUrl: file.storagePath })
+          }
+        });
+      } catch {
+        // Ignore background analytics logging errors
+      }
+
+      return {
+        isExternalUrl: true,
+        downloadUrl: file.storagePath,
+        filePath: null,
+        fileName: file.fileName,
+        mimeType: file.mimeType
+      };
+    }
+
     // ─── SECURITY: Path Traversal Guard ──────────────────────────────────
     // Resolve the absolute path from the stored value, then verify it is
     // strictly inside the uploads root directory. Rejects any path that

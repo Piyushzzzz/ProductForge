@@ -13,15 +13,19 @@ export class FileController {
       const fileId = req.params.id as string;
       const isAdmin = req.user.role === 'ADMIN';
 
-      const { filePath, fileName, mimeType } = await FileService.getProtectedFileDownload(
+      const downloadInfo = await FileService.getProtectedFileDownload(
         fileId,
         req.user.userId,
         isAdmin
       );
 
-      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-      res.setHeader('Content-Type', mimeType || 'application/octet-stream');
-      res.sendFile(filePath);
+      if (downloadInfo.isExternalUrl && downloadInfo.downloadUrl) {
+        return res.redirect(downloadInfo.downloadUrl);
+      }
+
+      res.setHeader('Content-Disposition', `attachment; filename="${downloadInfo.fileName}"`);
+      res.setHeader('Content-Type', downloadInfo.mimeType || 'application/octet-stream');
+      res.sendFile(downloadInfo.filePath!);
     } catch (error) {
       next(error);
     }

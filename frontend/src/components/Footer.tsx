@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, Github, Terminal, ShieldCheck, Heart } from 'lucide-react';
+import { Layers, Github, Terminal, Heart } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
@@ -16,11 +16,6 @@ export const Footer: React.FC = () => {
             <p className="text-xs text-slate-400 max-w-sm leading-relaxed">
               Cloud-Based Digital Product Marketplace and Lifecycle Management Platform. Engineered for universities, software engineers, and digital toolmakers.
             </p>
-            <div className="flex items-center gap-3 pt-2">
-              <div className="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                <ShieldCheck className="w-3.5 h-3.5" /> Back-End Engineering Project
-              </div>
-            </div>
           </div>
 
           <div>

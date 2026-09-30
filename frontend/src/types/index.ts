@@ -1,5 +1,5 @@
 export type UserRole = 'CUSTOMER' | 'CREATOR' | 'ADMIN';
-export type ProductStatus = 'DRAFT' | 'BETA' | 'PUBLISHED' | 'ARCHIVED';
+export type ProductStatus = 'DRAFT' | 'BETA' | 'PUBLISHED' | 'UNPUBLISHED' | 'ARCHIVED';
 
 export interface User {
   id: string;
@@ -33,7 +33,7 @@ export interface PricingPlan {
   id: string;
   productId: string;
   name: string;
-  type: 'ONE_TIME' | 'RECURRING';
+  type: 'FREE' | 'ONE_TIME' | 'RECURRING';
   price: number;
   interval: string;
   features: string | string[];
@@ -47,6 +47,7 @@ export interface ProductFile {
   mimeType: string;
   checksum: string;
   createdAt: string;
+  storagePath?: string;
 }
 
 export interface ProductVersion {
@@ -55,10 +56,17 @@ export interface ProductVersion {
   versionNumber: string;
   releaseTitle: string;
   releaseNotes: string;
-  changelog: string;
+  changelog?: string;
   isBeta: boolean;
   isCurrent: boolean;
+  isRolledBack?: boolean;
+  rollbackReason?: string;
+  rollbackAt?: string;
+  githubReleaseId?: string;
+  releaseUrl?: string;
+  releaseTagName?: string;
   publishedAt: string;
+  createdAt?: string;
   files?: ProductFile[];
 }
 
@@ -87,6 +95,13 @@ export interface Product {
   status: ProductStatus;
   demoUrl?: string;
   githubRepo?: string;
+  githubRepoId?: string;
+  githubOwner?: string;
+  githubRepoName?: string;
+  githubUrl?: string;
+  githubDefaultBranch?: string;
+  githubConnectedAt?: string;
+  lastSyncedAt?: string;
   logoUrl?: string;
   bannerUrl?: string;
   averageRating: number;
@@ -137,3 +152,45 @@ export interface NotificationItem {
   linkUrl?: string;
   createdAt: string;
 }
+
+export interface GitHubConnectionStatus {
+  isConnected: boolean;
+  connection: {
+    id: string;
+    githubUsername: string;
+    avatarUrl?: string;
+    connectedAt: string;
+  } | null;
+}
+
+export interface GitHubRepo {
+  id: string;
+  name: string;
+  fullName: string;
+  owner: string;
+  htmlUrl: string;
+  description?: string;
+  isPrivate: boolean;
+  defaultBranch: string;
+  updatedAt: string;
+  stargazersCount: number;
+}
+
+export interface GitHubRelease {
+  id: string;
+  tagName: string;
+  name: string;
+  body: string;
+  isDraft: boolean;
+  isPrerelease: boolean;
+  htmlUrl: string;
+  publishedAt: string;
+  assets: {
+    id: string;
+    name: string;
+    size: number;
+    downloadUrl: string;
+    contentType: string;
+  }[];
+}
+

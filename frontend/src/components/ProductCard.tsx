@@ -1,25 +1,43 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Product } from '../types/index.js';
 import { LifecycleBadge } from './LifecycleBadge.js';
 import { TiltCard } from './TiltCard.js';
-import { Star, ShieldCheck, ArrowRight, Download, Eye, Sparkles } from 'lucide-react';
+import { Star, ArrowRight, Download, Eye, Sparkles } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
   onQuickBuy?: (product: Product) => void;
   onCategoryClick?: (categoryId: string) => void;
+  onPreview?: (product: Product) => void;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickBuy, onCategoryClick }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ 
+  product, 
+  onQuickBuy, 
+  onCategoryClick,
+  onPreview 
+}) => {
+  const navigate = useNavigate();
+
   const lowestPrice = product.pricingPlans && product.pricingPlans.length > 0
     ? Math.min(...product.pricingPlans.map(p => p.price))
     : 0;
 
+  const handleCardClick = () => {
+    if (onPreview) {
+      onPreview(product);
+    } else {
+      navigate(`/products/${product.slug}`);
+    }
+  };
+
   return (
     <TiltCard maxTilt={10} scale={1.02}>
-      <div className="glass-panel-3d rounded-3xl p-5 border border-white/10 flex flex-col justify-between h-full space-y-4 group">
-        
+      <div 
+        onClick={handleCardClick}
+        className="glass-panel-3d rounded-3xl p-5 border border-white/10 flex flex-col justify-between h-full space-y-4 group cursor-pointer hover:border-indigo-500/50 hover:shadow-glow-indigo transition-all duration-300"
+      >
         {/* Banner Image with 3D Depth Layer */}
         <div className="relative h-44 rounded-2xl overflow-hidden bg-slate-900 border border-white/10 group-hover:border-indigo-500/40 transition-colors">
           <img
@@ -29,8 +47,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickBuy, o
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0B1326] via-[#0B1326]/40 to-transparent" />
 
+          {/* Quick Preview Hover Indicator */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-[2px]">
+            <span className="px-3 py-1.5 rounded-xl bg-indigo-600/90 text-white font-semibold text-xs shadow-glow-indigo flex items-center gap-1.5">
+              <Eye className="w-3.5 h-3.5 text-cyan-300" /> Preview Project
+            </span>
+          </div>
+
           {/* Top Floating Badges */}
-          <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+          <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
             <LifecycleBadge status={product.status} />
             {product.category && (
               <button
@@ -47,7 +72,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickBuy, o
           </div>
 
           {/* Product Logo Thumbnail */}
-          <div className="absolute -bottom-3 left-4 w-12 h-12 rounded-2xl bg-indigo-950 border border-white/20 overflow-hidden shadow-lg shadow-black/50">
+          <div className="absolute -bottom-3 left-4 w-12 h-12 rounded-2xl bg-indigo-950 border border-white/20 overflow-hidden shadow-lg shadow-black/50 z-10">
             <img
               src={product.logoUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60'}
               alt={product.title}
@@ -91,24 +116,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickBuy, o
           <div>
             <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Starting at</span>
             <span className="text-lg font-bold font-mono text-white text-gradient-cyan-indigo">
-              ${lowestPrice.toFixed(2)}
+              ₹{lowestPrice.toLocaleString()}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
-            <Link
-              to={`/products/${product.slug}`}
-              className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/10 transition-colors"
-              title="View Product Architecture"
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCardClick();
+              }}
+              className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/10 transition-colors cursor-pointer"
+              title="Quick Preview"
             >
               <Eye className="w-4 h-4" />
-            </Link>
+            </button>
 
             {onQuickBuy && (
               <button
                 type="button"
-                onClick={() => onQuickBuy(product)}
-                className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-glow-indigo transition-all flex items-center gap-1.5"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onQuickBuy(product);
+                }}
+                className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-glow-indigo transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 Buy Now <ArrowRight className="w-3.5 h-3.5" />
               </button>

@@ -5,15 +5,22 @@ import { NotificationProvider } from './context/NotificationContext.js';
 import { Navbar } from './components/Navbar.js';
 import { Footer } from './components/Footer.js';
 
-// Pages
+// Public & General Pages
 import { MarketplacePage } from './pages/MarketplacePage.js';
 import { ProductDetailPage } from './pages/ProductDetailPage.js';
-import { CreatorDashboardPage } from './pages/CreatorDashboardPage.js';
-import { CreatorProductEditPage } from './pages/CreatorProductEditPage.js';
 import { CustomerLibraryPage } from './pages/CustomerLibraryPage.js';
 import { AdminDashboardPage } from './pages/AdminDashboardPage.js';
 import { LoginPage } from './pages/LoginPage.js';
 import { RegisterPage } from './pages/RegisterPage.js';
+
+// Creator Control Center Pages
+import { CreatorLayout } from './pages/creator/CreatorLayout.js';
+import { CreatorDashboardView } from './pages/creator/CreatorDashboardView.js';
+import { MyProductsView } from './pages/creator/MyProductsView.js';
+import { CreateProductView } from './pages/creator/CreateProductView.js';
+import { ProductControlCenterView } from './pages/creator/ProductControlCenterView.js';
+import { CreatorOrdersView } from './pages/creator/CreatorOrdersView.js';
+import { CreatorAnalyticsView } from './pages/creator/CreatorAnalyticsView.js';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles?: string[] }> = ({
   children,
@@ -63,28 +70,24 @@ export const App: React.FC = () => {
                   }
                 />
 
-                {/* Creator Studio & Lifecycle Management */}
+                {/* Creator Control Center Routes */}
                 <Route
-                  path="/creator"
+                  path="/creator/*"
                   element={
                     <ProtectedRoute allowedRoles={['CREATOR', 'ADMIN']}>
-                      <CreatorDashboardPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/creator/products/new"
-                  element={
-                    <ProtectedRoute allowedRoles={['CREATOR', 'ADMIN']}>
-                      <CreatorProductEditPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/creator/products/:id/edit"
-                  element={
-                    <ProtectedRoute allowedRoles={['CREATOR', 'ADMIN']}>
-                      <CreatorProductEditPage />
+                      <CreatorLayout>
+                        <Routes>
+                          <Route path="/" element={<Navigate to="/creator/dashboard" replace />} />
+                          <Route path="dashboard" element={<CreatorDashboardView />} />
+                          <Route path="products" element={<MyProductsView />} />
+                          <Route path="products/new" element={<CreateProductView />} />
+                          <Route path="products/:id" element={<ProductControlCenterView />} />
+                          <Route path="products/:id/*" element={<ProductControlCenterView />} />
+                          <Route path="orders" element={<CreatorOrdersView />} />
+                          <Route path="analytics" element={<CreatorAnalyticsView />} />
+                          <Route path="*" element={<Navigate to="/creator/dashboard" replace />} />
+                        </Routes>
+                      </CreatorLayout>
                     </ProtectedRoute>
                   }
                 />

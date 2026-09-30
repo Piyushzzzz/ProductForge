@@ -1,4 +1,5 @@
 import { prisma } from '../config/db.js';
+import { CategoryService } from './category.service.js';
 
 export class MarketplaceService {
   static async getProducts(filters: {
@@ -119,17 +120,6 @@ export class MarketplaceService {
   }
 
   static async getCategories() {
-    return prisma.category.findMany({
-      include: {
-        _count: {
-          select: {
-            products: {
-              where: { status: { in: ['PUBLISHED', 'BETA'] } }
-            }
-          }
-        }
-      },
-      orderBy: { name: 'asc' }
-    });
+    return CategoryService.getAll();
   }
 }

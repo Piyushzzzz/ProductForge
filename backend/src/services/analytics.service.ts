@@ -90,25 +90,51 @@ export class AnalyticsService {
   }
 
   static async getAdminOverview() {
-    const [totalUsers, totalCreators, totalProducts, totalOrders, totalEvents] = await Promise.all([
+    const [totalUsers, totalCreators, totalProducts, totalOrders, activeEntitlements, recentProducts, recentUsers] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { role: 'CREATOR' } }),
       prisma.product.count(),
       prisma.order.count(),
-      prisma.analyticsEvent.count()
+      prisma.entitlement.count({ where: { status: 'ACTIVE' } }),
+      prisma.product.findMany({
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          creator: { select: { id: true, name: true, email: true } },
+          category: { select: { id: true, name: true, slug: true } },
+          _count: { select: { orderItems: true } }
+        }
+      }),
+      prisma.user.findMany({
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          createdAt: true
+        }
+      })
     ]);
 
     const aggregateSales = await prisma.order.aggregate({
       _sum: { totalAmount: true }
     });
 
+    const totalGMV = aggregateSales._sum.totalAmount || 0;
+
     return {
       totalUsers,
       totalCreators,
       totalProducts,
       totalOrders,
-      totalEvents,
-      grossMarketplaceVolume: aggregateSales._sum.totalAmount || 0
+      totalGMV,
+      grossMarketplaceVolume: totalGMV,
+      activeEntitlements,
+      systemHealth: '100% Operational',
+      recentUsers,
+      recentProducts
     };
   }
 }

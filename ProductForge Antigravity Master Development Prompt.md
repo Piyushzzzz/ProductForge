@@ -1,356 +1,288 @@
-# ProductForge: Cloud-Based Digital Product Marketplace and Lifecycle Management Platform
+# PRODUCTFORGE: CREATOR CONTROL CENTER + GITHUB INTEGRATION
 
-## ROLE
+## PROJECT
 
-Act as a senior full-stack software engineer, backend architect, database designer, UI/UX engineer, and technical project mentor.
-
-Build a complete academic but production-quality full-stack project named:
-
-**ProductForge**
-
-Official project title:
+Build the missing Creator-side functionality of:
 
 **ProductForge: Cloud-Based Digital Product Marketplace and Lifecycle Management Platform**
 
-The project is being developed for a university Back-end Engineering course.
+The current project does not yet have a complete Creator Dashboard, Creator Product Management system, pricing controls, product file upload, release management, or GitHub repository integration.
 
-The project must demonstrate:
+Implement these features from scratch and integrate them into the existing ProductForge architecture.
 
-- Requirement Analysis
-- System Design
-- Backend Engineering
-- REST API development
-- Relational database design
-- Authentication and authorization
-- Module-based development
-- React frontend development
-- Frontend-backend integration
-- GitHub-based team development
-- Clean project documentation
+Do NOT create only static frontend screens.
 
-Do not build unnecessary enterprise complexity. The architecture should be realistic, maintainable, understandable by university students, and expandable in the future.
+Everything must be connected to the backend, database, authentication, and APIs.
 
 ---
 
-# 1. PROJECT CONCEPT
+# 1. MAIN OBJECTIVE
 
-ProductForge is a cloud-based platform where developers and software creators can publish, sell, distribute, update, and manage software-based digital products throughout their lifecycle.
+The Creator must have complete control over the software products they create on ProductForge.
 
-The platform is NOT a generic marketplace for physical goods.
-
-The primary products are software-based digital products such as:
-
-- SaaS products
-- APIs
-- Browser extensions
-- Plugins
-- Developer tools
-- CLI tools
-- Software templates
-- Starter kits
-- UI component libraries
-- Downloadable software
-- SDKs and developer packages
-
-The core concept is:
-
-**Create → Publish → Sell → Give Access → Release Updates → Manage Customers → Analyze Product**
-
-The digital product remains the central entity throughout its lifecycle.
-
-Example:
-
-A developer publishes:
-
-**InvoicePro v1.0**
-
-Customers purchase it.
-
-Later the developer releases:
-
-**InvoicePro v1.1**
-
-The platform maintains:
-
-- Product information
-- Version history
-- Release notes
-- Product files
-- Customer ownership/access
-- Orders
-- Reviews
-- Analytics
-- Notifications
-
-The platform should therefore be more than a simple e-commerce website.
-
----
-
-# 2. CORE USER ROLES
-
-Implement three primary roles.
-
-## CREATOR
-
-Creators can:
-
-- Register/login
-- Create products
-- Edit products
-- Publish products
-- Upload product information
-- Manage pricing
-- Create product releases
-- Upload release files
-- View customers
-- View product analytics
-- Manage product lifecycle
-
-## CUSTOMER
-
-Customers can:
-
-- Register/login
-- Browse marketplace
-- Search products
-- Filter products
-- View product details
-- Purchase products
-- View purchased products
-- Access entitled products
-- View releases
-- Download authorized files
-- Review products
-- Receive notifications
-
-## ADMIN
-
-Admins can:
-
-- View users
-- Manage users
-- View products
-- Manage products
-- Manage categories
-- Moderate reviews
-- View platform information
-
-Use role-based authorization so users cannot access functions outside their role.
-
----
-
-# 3. DEVELOPMENT PHASES
-
-Organize the project into three development phases.
-
-## PHASE 1: REQUIREMENT ANALYSIS
-
-Document:
-
-- Problem statement
-- Proposed solution
-- Objectives
-- Target users
-- Functional requirements
-- Non-functional requirements
-- User roles
-- Module division
-- Project workflow
-- Basic use cases
-
-Create a `/docs` folder containing this documentation.
-
-Suggested files:
+After logging in, a creator must be able to:
 
 ```text
-docs/
-├── requirements.md
-├── functional-requirements.md
-├── non-functional-requirements.md
-├── module-division.md
-└── project-workflow.md
+Login
+ ↓
+Creator Dashboard
+ ↓
+My Products
+ ↓
+Create / Edit / Manage Product
+ ↓
+Connect GitHub Repository
+ ↓
+Set Pricing
+ ↓
+Upload Product / Release Files
+ ↓
+Create Releases
+ ↓
+Publish Product
+ ↓
+Manage Customers
+ ↓
+View Orders
+ ↓
+View Analytics
 ```
 
----
+The Creator Dashboard must display the **actual products belonging to the authenticated creator**.
 
-# 4. PHASE 2: SYSTEM DESIGN AND BACKEND
-
-This is the primary engineering focus.
-
-Design and implement a modular backend.
-
-Recommended stack:
-
-## Frontend
-
-- React
-- TypeScript
-- Vite or Next.js
-- Tailwind CSS
-
-## Backend
-
-- Node.js
-- Express.js
-- TypeScript
-
-## Database
-
-- PostgreSQL
-
-## Authentication
-
-- JWT
-- bcrypt
-
-## API
-
-- REST API
-
-## File Storage
-
-Use an abstraction that can work with:
-
-- Local storage during development
-- S3-compatible cloud storage later
-
-## Real-Time
-
-- Socket.IO
-
-Do not introduce unnecessary microservices.
-
-Use a clean modular monolith architecture.
+Do NOT display hard-coded products.
 
 ---
 
-# 5. BACKEND ARCHITECTURE
+# 2. CREATOR DASHBOARD
 
-Use a structure similar to:
+Create a dedicated Creator Dashboard.
+
+Route:
 
 ```text
-backend/
-│
-├── src/
-│   ├── config/
-│   ├── controllers/
-│   ├── routes/
-│   ├── services/
-│   ├── repositories/
-│   ├── models/
-│   ├── middleware/
-│   ├── validators/
-│   ├── utils/
-│   ├── sockets/
-│   ├── app.ts
-│   └── server.ts
-│
-├── prisma/
-│   └── schema.prisma
-│
-├── tests/
-│
-├── .env.example
-├── package.json
-└── README.md
+/creator/dashboard
 ```
 
-If Prisma is used with PostgreSQL, use it consistently for database access.
+The dashboard should contain:
 
-Do not mix multiple ORM systems.
+### Summary Cards
 
----
+* Total Products
+* Published Products
+* Total Customers
+* Total Orders
+* Total Revenue
+* Downloads
 
-# 6. MODULE DIVISION
-
-Create clearly separated backend modules.
-
-## Module 1: Authentication & User Management
-
-Responsibilities:
-
-- Registration
-- Login
-- Password hashing
-- JWT authentication
-- Role management
-- Profile management
-
-Example APIs:
-
-```text
-POST /api/auth/register
-POST /api/auth/login
-GET  /api/auth/me
-PUT  /api/users/profile
-```
-
----
-
-## Module 2: Product Management
-
-Responsibilities:
-
-- Create product
-- Update product
-- Delete/archive product
-- Publish product
-- Product status
-- Product metadata
+These values must come from backend APIs.
 
 Example:
 
 ```text
-POST   /api/products
-GET    /api/products
-GET    /api/products/:id
-PUT    /api/products/:id
-DELETE /api/products/:id
-PATCH  /api/products/:id/publish
+Products       5
+Published      3
+Customers      248
+Orders         315
+Revenue        ₹82,450
+Downloads      1,240
 ```
 
 ---
 
-## Module 3: Marketplace
+# 3. MY PRODUCTS
 
-Responsibilities:
+Create:
 
-- Product discovery
-- Search
-- Filtering
-- Categories
-- Product details
-- Sorting
+```text
+/creator/products
+```
+
+This is the most important creator page.
+
+It must retrieve products using the authenticated creator ID.
+
+API:
+
+```http
+GET /api/creator/products
+```
+
+The backend must identify the authenticated creator from the JWT/session.
+
+Do NOT allow a creator to retrieve another creator's products.
+
+Display each product as a card or table.
 
 Example:
 
 ```text
-GET /api/marketplace/products
-GET /api/marketplace/search
-GET /api/categories
+┌──────────────────────────────────────────────┐
+│ InvoicePro                    ● Published    │
+│ Invoice management software                 │
+│ Version: v2.1.0                             │
+│ Customers: 245                              │
+│ Revenue: ₹45,200                             │
+│                                              │
+│ [Manage] [Releases] [Pricing] [View]         │
+└──────────────────────────────────────────────┘
+```
+
+Also provide:
+
+```text
+[ + Create New Product ]
 ```
 
 ---
 
-## Module 4: Product Release Management
+# 4. CREATE PRODUCT
 
-Responsibilities:
+Create:
 
-- Create versions
-- Release notes
-- Changelog
-- Release status
-- Version history
+```text
+/creator/products/new
+```
+
+The creator must be able to create a real database record.
+
+Fields:
+
+* Product Name
+* Short Description
+* Full Description
+* Product Type
+* Category
+* Logo
+* Banner
+* Screenshots
+* Demo URL
+* Documentation URL
+* GitHub Repository
+* Product Status
+
+Product types:
+
+```text
+SaaS
+Desktop Software
+Browser Extension
+API
+Plugin
+Developer Tool
+CLI Tool
+SDK
+Template
+Starter Kit
+Other Software
+```
+
+Initial status:
+
+```text
+DRAFT
+```
+
+Buttons:
+
+```text
+[ Save Draft ]
+[ Continue ]
+```
+
+---
+
+# 5. PRODUCT EDITING
+
+Create:
+
+```text
+/creator/products/:productId/edit
+```
+
+Only the creator who owns the product can edit it.
+
+The backend must perform ownership validation.
+
+Never rely only on frontend hiding.
+
+The backend must reject unauthorized access.
 
 Example:
 
 ```text
-POST /api/products/:id/releases
-GET  /api/products/:id/releases
-GET  /api/releases/:id
+Creator A
+   ↓
+InvoicePro
+   ↓
+Allowed ✓
+
+Creator B
+   ↓
+InvoicePro
+   ↓
+403 Forbidden
 ```
 
-Product lifecycle:
+---
+
+# 6. PRODUCT CONTROL CENTER
+
+Every creator product needs its own control center.
+
+Route:
+
+```text
+/creator/products/:productId
+```
+
+Navigation:
+
+```text
+Overview
+Product
+Pricing
+Releases
+GitHub
+Files
+Customers
+Orders
+Analytics
+Settings
+```
+
+Header:
+
+```text
+InvoicePro
+● Published
+
+v2.1.0
+245 Customers
+₹45,200 Revenue
+
+[ Edit Product ]
+[ New Release ]
+[ Change Pricing ]
+```
+
+---
+
+# 7. PRODUCT STATUS
+
+Implement product lifecycle states:
+
+```text
+DRAFT
+BETA
+PUBLISHED
+UNPUBLISHED
+ARCHIVED
+```
+
+Allow valid state transitions.
+
+Example:
 
 ```text
 DRAFT
@@ -359,150 +291,685 @@ BETA
  ↓
 PUBLISHED
  ↓
-UPDATED
+UNPUBLISHED
  ↓
 ARCHIVED
 ```
 
----
+The creator should have appropriate actions:
 
-## Module 5: Product File Management
+```text
+[ Publish ]
+[ Unpublish ]
+[ Archive ]
+```
 
-Responsibilities:
-
-- Upload product files
-- Store file metadata
-- Associate files with releases
-- Secure file access
-
-Do not expose private product files through publicly accessible URLs.
-
-Use authorization before providing protected downloads.
+Do not allow invalid transitions.
 
 ---
 
-## Module 6: Order & Payment
+# 8. PRICING MANAGEMENT
 
-Responsibilities:
+Create:
 
-- Create order
-- Order items
-- Payment status
-- Payment verification
-- Purchase history
+```text
+/creator/products/:productId/pricing
+```
+
+The creator must be able to decide how the product is sold.
+
+Pricing models:
+
+```text
+FREE
+ONE_TIME
+SUBSCRIPTION
+```
+
+Support:
+
+### Free
+
+```text
+Price: ₹0
+```
+
+### One-Time Purchase
+
+```text
+Price:
+₹999
+
+Currency:
+INR
+```
+
+### Subscription
+
+Allow:
+
+```text
+Monthly
+Yearly
+```
 
 Example:
 
 ```text
-POST /api/orders
-GET  /api/orders
-GET  /api/orders/:id
-POST /api/payments/verify
+Pro
+₹499 / month
+
+Business
+₹1,499 / month
 ```
 
-Use a payment sandbox/test environment.
+Creator controls:
 
-Do not implement real financial transactions during development.
+* Create pricing plan
+* Edit pricing plan
+* Disable plan
+* Change price
+* Change currency
+* Set billing interval
+* Set trial period if implemented
+
+All pricing information must be stored in PostgreSQL.
 
 ---
 
-## Module 7: Entitlement
+# 9. PRODUCT FILE UPLOAD
 
-This is an important module.
+Create product file management.
 
-After successful purchase:
+Route:
 
 ```text
-Customer
-   ↓
-Order
-   ↓
-Payment Verified
-   ↓
-Entitlement Created
-   ↓
-Customer Gets Product Access
+/creator/products/:productId/files
 ```
 
-An entitlement determines whether a customer is allowed to access a product.
+Creators may upload:
+
+* Software installers
+* ZIP packages
+* Application packages
+* Documentation
+* Product assets
+
+Do not store large binary files directly inside PostgreSQL.
+
+Use object/cloud storage.
+
+Architecture:
+
+```text
+Creator
+ ↓
+Frontend
+ ↓
+Backend
+ ↓
+Cloud/Object Storage
+ ↓
+File URL / Storage Key
+ ↓
+PostgreSQL Metadata
+```
+
+Database stores:
+
+```text
+file_id
+product_id
+release_id
+file_name
+file_size
+mime_type
+storage_key
+created_at
+```
+
+---
+
+# 10. RELEASE MANAGEMENT
+
+Create:
+
+```text
+/creator/products/:productId/releases
+```
+
+Display:
+
+```text
+InvoicePro Releases
+
+v2.1.0   Current
+v2.0.0
+v1.5.0
+v1.0.0
+
+[ + Create Release ]
+```
+
+Create release:
+
+```text
+Version:
+2.2.0
+
+Release Name:
+Performance Update
+
+Release Notes:
+...
+
+Compatibility:
+☑ Windows
+☑ macOS
+☑ Linux
+
+GitHub Release:
+[ Select / Sync ]
+
+Product Files:
+[ Upload ]
+
+[ Save Draft ]
+[ Publish Release ]
+```
+
+Store:
+
+```text
+ProductRelease
+```
+
+with:
+
+```text
+id
+product_id
+version
+release_name
+release_notes
+status
+github_release_id
+release_url
+published_at
+created_at
+```
+
+---
+
+# 11. GITHUB INTEGRATION
+
+This is a core feature.
+
+The creator should be able to connect their GitHub account.
+
+Use:
+
+**GitHub OAuth**
+
+Do NOT ask users to enter their GitHub password.
+
+Do NOT store raw GitHub passwords.
+
+After authorization, retrieve repositories that the creator is authorized to access.
+
+---
+
+# 12. GITHUB CONNECTION PAGE
+
+Create:
+
+```text
+/creator/products/:productId/github
+```
+
+Initial state:
+
+```text
+Connect your GitHub repository
+
+Connect your GitHub account to associate
+this software product with its source repository.
+
+[ Connect GitHub ]
+```
+
+After successful connection:
+
+```text
+GitHub Connected ✓
+
+Repositories
+
+Search repositories...
+
+invoice-pro
+developer-tools
+task-manager
+
+[ Select Repository ]
+```
+
+The creator selects one repository.
+
+---
+
+# 13. STORE GITHUB REPOSITORY
+
+After selection, associate the repository with the ProductForge product.
 
 Example:
 
 ```text
-Customer A
-Product: InvoicePro
-Plan: Pro
-Status: Active
+Product:
+InvoicePro
+
+GitHub Repository:
+developer/invoice-pro
+
+Repository URL:
+https://github.com/developer/invoice-pro
+
+Connection:
+Connected ✓
+
+Latest Release:
+v2.1.0
+
+Last Synced:
+Today
 ```
 
----
+Database should store repository metadata, not source code.
 
-## Module 8: Reviews
-
-Responsibilities:
-
-- Add review
-- Update review
-- Delete review
-- Rating
-- Product rating calculation
-
-Only allow eligible customers to review products.
-
----
-
-## Module 9: Analytics
-
-Track events such as:
+Suggested fields:
 
 ```text
-PRODUCT_VIEW
-PRODUCT_PURCHASE
-PRODUCT_DOWNLOAD
-RELEASE_VIEW
-REVIEW_CREATED
-SUBSCRIPTION_STARTED
+github_repository_id
+github_owner
+github_repository
+github_url
+github_default_branch
+github_visibility
+github_connected_at
+last_synced_at
 ```
 
-Creators should eventually be able to see:
+---
 
-- Product views
-- Purchases
-- Downloads
-- Revenue
-- Conversion information
+# 14. GITHUB RELEASE SYNCHRONIZATION
+
+ProductForge should retrieve release information from the connected repository.
+
+Example:
+
+GitHub:
+
+```text
+v1.0.0
+v1.1.0
+v2.0.0
+v2.1.0
+```
+
+ProductForge displays:
+
+```text
+Available GitHub Releases
+
+v2.1.0
+v2.0.0
+v1.1.0
+v1.0.0
+```
+
+Creator can choose:
+
+```text
+[ Sync Release ]
+```
+
+or:
+
+```text
+[ Import Release ]
+```
+
+The imported release should create a ProductForge ProductRelease record.
 
 ---
 
-## Module 10: Notifications
+# 15. IMPORTANT GITHUB DISTINCTION
 
-Support notifications such as:
+Do NOT treat GitHub as ProductForge's entire version-control system.
 
-- Purchase successful
-- New release available
-- Review received
-- Subscription status changed
+GitHub manages:
 
-Use Socket.IO where real-time behavior is appropriate.
+* Source code
+* Commits
+* Branches
+* Pull requests
+* Technical releases
+
+ProductForge manages:
+
+* Product listing
+* Pricing
+* Marketplace
+* Purchases
+* Customer access
+* Product entitlements
+* Commercial product releases
+* Customers
+* Orders
+* Analytics
+
+Therefore:
+
+```text
+GitHub
+   ↓
+Technical Source + Release Information
+   ↓
+ProductForge
+   ↓
+Commercial Product
+   ↓
+Customers
+```
+
+Do NOT expose a private repository's source code to customers.
 
 ---
 
-# 7. DATABASE DESIGN
+# 16. MANUAL GITHUB SYNC
 
-Use PostgreSQL.
+Implement a fallback:
 
-Design proper relational tables.
+```text
+[ Sync GitHub ]
+```
 
-Core entities:
+When clicked:
+
+```text
+ProductForge
+ ↓
+GitHub API
+ ↓
+Fetch repository
+ ↓
+Fetch releases
+ ↓
+Update ProductRelease
+ ↓
+Update latest version
+ ↓
+Return sync result
+```
+
+Display:
+
+```text
+✓ GitHub synchronized successfully
+
+Latest release:
+v2.1.0
+
+3 releases synchronized
+```
+
+---
+
+# 17. GITHUB WEBHOOK
+
+If feasible, add webhook support.
+
+When GitHub creates a new release:
+
+```text
+GitHub
+ ↓
+Webhook
+ ↓
+ProductForge
+ ↓
+Verify event
+ ↓
+Update release
+ ↓
+Notify creator
+```
+
+However, manual synchronization must remain available.
+
+Do not make webhook implementation a blocker for the MVP.
+
+---
+
+# 18. CREATOR CUSTOMERS
+
+Create:
+
+```text
+/creator/products/:productId/customers
+```
+
+Display:
+
+```text
+Customer       Plan       Status      Joined
+------------------------------------------------
+Rahul          Pro        Active      Aug 12
+Aman           Basic      Active      Aug 10
+Priya          Pro        Active      Aug 08
+```
+
+Creator can see:
+
+* Customer name
+* Product
+* Plan
+* Purchase date
+* Access status
+* Subscription status
+
+Do not display sensitive payment information.
+
+---
+
+# 19. CREATOR ORDERS
+
+Create:
+
+```text
+/creator/orders
+```
+
+Show:
+
+```text
+Order #1023
+InvoicePro
+₹999
+Completed
+Aug 24
+
+Order #1022
+DevAPI Pro
+₹499
+Completed
+Aug 23
+```
+
+Filter:
+
+* Product
+* Status
+* Date
+
+---
+
+# 20. CREATOR ANALYTICS
+
+Create:
+
+```text
+/creator/analytics
+```
+
+Display:
+
+```text
+Total Views
+Total Customers
+Total Orders
+Revenue
+Downloads
+Conversion Rate
+```
+
+For each product:
+
+```text
+InvoicePro
+
+Views: 12,450
+Purchases: 245
+Downloads: 1,240
+Revenue: ₹45,200
+```
+
+Use real database analytics where available.
+
+---
+
+# 21. CREATOR NAVIGATION
+
+The final sidebar should contain:
+
+```text
+Creator Dashboard
+
+Overview
+
+My Products
+  ├── All Products
+  └── Create Product
+
+Releases
+
+Orders
+
+Customers
+
+Analytics
+
+GitHub
+
+Settings
+```
+
+The creator should never need to leave the creator dashboard to control their products.
+
+---
+
+# 22. BACKEND APIs
+
+Implement APIs similar to:
+
+### Creator
+
+```http
+GET    /api/creator/dashboard
+GET    /api/creator/products
+POST   /api/creator/products
+GET    /api/creator/products/:id
+PUT    /api/creator/products/:id
+DELETE /api/creator/products/:id
+PATCH  /api/creator/products/:id/status
+```
+
+### Pricing
+
+```http
+GET    /api/products/:id/pricing
+POST   /api/products/:id/pricing
+PUT    /api/products/:id/pricing/:planId
+DELETE /api/products/:id/pricing/:planId
+```
+
+### Releases
+
+```http
+GET    /api/products/:id/releases
+POST   /api/products/:id/releases
+PUT    /api/releases/:releaseId
+DELETE /api/releases/:releaseId
+POST   /api/products/:id/releases/:releaseId/publish
+```
+
+### Files
+
+```http
+POST   /api/products/:id/files
+GET    /api/products/:id/files
+DELETE /api/files/:fileId
+```
+
+### GitHub
+
+```http
+GET    /api/github/connect
+GET    /api/github/callback
+GET    /api/github/repositories
+POST   /api/github/products/:productId/connect
+POST   /api/github/products/:productId/sync
+DELETE /api/github/products/:productId/disconnect
+GET    /api/github/products/:productId/releases
+```
+
+### Customers
+
+```http
+GET /api/creator/products/:id/customers
+```
+
+### Orders
+
+```http
+GET /api/creator/orders
+```
+
+### Analytics
+
+```http
+GET /api/creator/analytics
+GET /api/creator/products/:id/analytics
+```
+
+---
+
+# 23. DATABASE ADDITIONS
+
+Make sure the database supports all creator functionality.
+
+Required entities:
 
 ```text
 User
 CreatorProfile
 Product
 Category
+PricingPlan
 ProductVersion
 ProductFile
-PricingPlan
+GitHubConnection
+GitHubRepository
 Order
 OrderItem
 Payment
@@ -513,368 +980,154 @@ AnalyticsEvent
 Notification
 ```
 
-Important relationships:
+Important relationship:
 
 ```text
-User 1 ─── N Product
-
-Product 1 ─── N ProductVersion
-
-ProductVersion 1 ─── N ProductFile
-
-User 1 ─── N Order
-
-Order 1 ─── N OrderItem
-
-User N ─── N Product
-        through Entitlement
-
-Product 1 ─── N Review
-
-Product 1 ─── N AnalyticsEvent
-```
-
-Create:
-
-- ER diagram
-- Database schema
-- migrations
-- seed data
-
-Add realistic sample products and users.
-
----
-
-# 8. API REQUIREMENTS
-
-Create a clean REST API.
-
-Use:
-
-```text
-/api/auth
-/api/users
-/api/products
-/api/releases
-/api/categories
-/api/orders
-/api/payments
-/api/entitlements
-/api/reviews
-/api/analytics
-/api/notifications
-```
-
-Every API should have:
-
-- Input validation
-- Proper HTTP status codes
-- Error handling
-- Authentication where required
-- Authorization where required
-- Consistent JSON responses
-
-Do not put business logic directly inside route handlers.
-
-Use:
-
-```text
-Route
- ↓
-Controller
- ↓
-Service
- ↓
-Repository
- ↓
-Database
+Creator
+   ↓
+Product
+   ↓
+GitHubRepository
+   ↓
+GitHub Releases
+   ↓
+ProductRelease
 ```
 
 ---
 
-# 9. SECURITY
+# 24. FRONTEND REQUIREMENTS
 
-Implement:
+Create all creator pages using the selected Stitch design.
 
-- Password hashing
-- JWT authentication
-- Role-based authorization
-- Input validation
-- Protected routes
-- Environment variables
-- CORS configuration
-- Secure error responses
-- Ownership checks
-- Protected product downloads
-
-Never hard-code:
-
-- passwords
-- JWT secrets
-- database credentials
-- payment keys
-
-Create:
+Required pages:
 
 ```text
-.env.example
+/creator/dashboard
+/creator/products
+/creator/products/new
+/creator/products/:id
+/creator/products/:id/edit
+/creator/products/:id/pricing
+/creator/products/:id/releases
+/creator/products/:id/files
+/creator/products/:id/github
+/creator/products/:id/customers
+/creator/orders
+/creator/analytics
 ```
 
-instead.
+Do not make these static pages.
+
+Every page must use backend APIs.
 
 ---
 
-# 10. PHASE 3: FRONTEND DEVELOPMENT
+# 25. PRODUCT OWNERSHIP SECURITY
 
-IMPORTANT:
+This is mandatory.
 
-Before implementing the frontend, DO NOT immediately choose a design yourself.
-
-Use **Stitch** to generate multiple UI design concepts for ProductForge.
-
-Generate at least **3 different professional frontend design directions**.
-
-Each design should include:
-
-### Design A
-
-Marketplace-focused design.
-
-### Design B
-
-Modern SaaS/product ecosystem design.
-
-### Design C
-
-Developer-focused software marketplace design.
-
-All designs should be appropriate for a final-year engineering project and should look like a real software platform.
-
----
-
-# 11. STITCH DESIGN REQUIREMENTS
-
-Generate Stitch designs for:
-
-### Customer
-
-- Landing/Home page
-- Marketplace
-- Product listing
-- Product details
-- Login/Register
-- Checkout
-- Customer dashboard
-- My Products
-- Product access page
-- Notifications
-
-### Creator
-
-- Creator dashboard
-- My Products
-- Create Product
-- Edit Product
-- Product lifecycle
-- Release management
-- Analytics
-- Customer management
-
-### Admin
-
-- Admin dashboard
-- User management
-- Product management
-- Category management
-
-The designs should use one consistent design system.
-
-Include:
-
-- Navigation
-- Cards
-- Buttons
-- Forms
-- Tables
-- Modals
-- Status badges
-- Charts
-- Empty states
-- Loading states
-- Error states
-- Responsive layouts
-
----
-
-# 12. IMPORTANT STITCH WORKFLOW
-
-Do this in two stages.
-
-## STAGE 1: DESIGN SELECTION
-
-Generate the 3 Stitch design concepts.
-
-DO NOT start implementing the final frontend yet.
-
-Show the designs clearly and label them:
-
-```text
-Design A
-Design B
-Design C
-```
-
-Wait for the developer/user to select one.
-
-## STAGE 2: IMPLEMENTATION
-
-After the user selects one Stitch design:
-
-Use the selected Stitch design as the visual reference.
-
-Implement the React frontend based on that design.
-
-Do not redesign the interface independently unless required for functionality.
-
-Maintain:
-
-- Same layout structure
-- Similar spacing
-- Typography hierarchy
-- Navigation style
-- Component style
-- Card structure
-- Dashboard structure
-- Color system
-- Responsive behavior
-
----
-
-# 13. FRONTEND IMPLEMENTATION
-
-After a Stitch design has been selected, implement:
-
-```text
-src/
-├── components/
-├── pages/
-├── layouts/
-├── hooks/
-├── services/
-├── contexts/
-├── types/
-├── utils/
-└── assets/
-```
-
-Create reusable components.
-
-Examples:
-
-```text
-Navbar
-Sidebar
-ProductCard
-ProductGrid
-ProductDetails
-ProductForm
-ReleaseCard
-ReviewCard
-AnalyticsCard
-DataTable
-Modal
-Toast
-Button
-Input
-```
-
-Do not duplicate UI code unnecessarily.
-
----
-
-# 14. FRONTEND-BACKEND INTEGRATION
-
-The frontend must actually communicate with the backend.
-
-Do not create fake static pages.
+Every creator request involving a product must verify ownership.
 
 For example:
 
 ```text
-React Login
-      ↓
-POST /api/auth/login
-      ↓
-Backend
-      ↓
-PostgreSQL
-      ↓
-JWT
-      ↓
-React Dashboard
+GET /api/creator/products/123
 ```
 
-Similarly:
+Backend:
 
 ```text
-Creator
- ↓
-Create Product Form
- ↓
-POST /api/products
- ↓
-Backend
- ↓
-PostgreSQL
- ↓
-Marketplace
- ↓
-Customer sees product
+Authenticated User
+       ↓
+Find Product 123
+       ↓
+Check product.creator_id
+       ↓
+Compare with authenticated user.id
+       ↓
+Allowed / Forbidden
 ```
 
-The core frontend should demonstrate real data flow.
+Never trust a creator ID supplied by the frontend.
 
 ---
 
-# 15. DEMO WORKFLOW
+# 26. FRONTEND UX
 
-The final working demonstration should be capable of showing:
+The Creator Dashboard should feel like a real product-management platform.
 
-### Creator
+Include:
 
-1. Login
-2. Open creator dashboard
-3. Create a product
-4. Add product information
-5. Publish product
-6. View product
+* Sidebar
+* Top navigation
+* Product cards
+* Status badges
+* Tables
+* Charts
+* Forms
+* Modals
+* Confirmation dialogs
+* Toast messages
+* Loading states
+* Empty states
+* Error states
 
-### Customer
+Example empty state:
 
-1. Login
-2. Browse marketplace
-3. Search product
-4. Open product
-5. Purchase/test purchase
-6. View product in customer library
+```text
+You haven't created any products yet.
 
-### Product Lifecycle
+Create your first software product and start
+selling it through ProductForge.
 
-1. Creator opens product
-2. Creates Version 1.0
-3. Publishes release
-4. Creates Version 1.1
-5. Customer can see the new release
-
-This should be a real database-backed workflow.
+[ + Create Product ]
+```
 
 ---
 
-# 16. GITHUB REQUIREMENTS
+# 27. STITCH DESIGN
 
-Create a clean GitHub repository.
+Before implementing the frontend, generate three Stitch design options specifically for the **Creator Experience**.
 
-Suggested structure:
+### Design A
+
+Developer-focused dashboard.
+
+### Design B
+
+Modern SaaS creator control center.
+
+### Design C
+
+Product lifecycle-focused creator workspace.
+
+Each design must include:
+
+* Creator Dashboard
+* My Products
+* Create Product
+* Product Control Center
+* Pricing
+* Releases
+* GitHub Integration
+* Customers
+* Orders
+* Analytics
+
+Do NOT implement the frontend before a design is selected.
+
+Generate the three Stitch options and wait for selection.
+
+After selection, implement the selected design faithfully.
+
+---
+
+# 28. TEAM GITHUB REPOSITORY
+
+This is separate from the GitHub integration inside ProductForge.
+
+The university project repository should contain:
 
 ```text
 ProductForge/
@@ -883,208 +1136,298 @@ ProductForge/
 ├── backend/
 ├── database/
 ├── docs/
-│   ├── requirements/
-│   ├── architecture/
-│   ├── database/
-│   ├── dfd/
-│   └── uml/
-│
 ├── README.md
 ├── .gitignore
-└── LICENSE
+└── .env.example
 ```
 
-The README should contain:
+Add all team members as collaborators.
 
-- Project overview
-- Problem statement
-- Features
-- Architecture
-- Technology stack
-- Installation
-- Environment variables
-- Database setup
-- API information
-- Team members
-- Module responsibilities
-- Screenshots
-- Future scope
-
-Use meaningful commits.
-
-Do not make one person commit the entire project.
-
-Each team member must contribute to their assigned module.
-
----
-
-# 17. TEAM CONTRIBUTION
-
-Create a section in the README:
+Use feature branches:
 
 ```text
-Team Member 1
-Module: Authentication & User Management
-
-Team Member 2
-Module: Product Management & Marketplace
-
-Team Member 3
-Module: Release Management & File Storage
-
-Team Member 4
-Module: Orders, Payments & Entitlements
-
-Team Member 5
-Module: Analytics, Reviews & Notifications
+feature/creator-dashboard
+feature/product-management
+feature/github-integration
+feature/release-management
+feature/pricing
 ```
 
-The actual assignments can be changed according to the team.
+Do not let every developer directly modify `main`.
 
-Each member must understand:
-
-- Their database tables
-- Their APIs
-- Their backend logic
-- Their frontend integration
-- Their GitHub commits
-- Their module's purpose
-
----
-
-# 18. DOCUMENTATION
-
-Create documentation for:
+Use:
 
 ```text
-docs/
-├── requirements.md
-├── architecture.md
-├── database.md
-├── api.md
-├── module-division.md
-├── setup.md
-└── development-phases.md
+feature branch
+      ↓
+commit
+      ↓
+pull request
+      ↓
+review
+      ↓
+merge
 ```
 
-Also create diagrams:
+---
 
-- High-Level System Architecture
-- ER Diagram
-- DFD Level 0
-- DFD Level 1
-- Use Case Diagram
-- Important Sequence Diagrams
+# 29. TEAM CONTRIBUTION
+
+Assign modules clearly.
+
+Example:
+
+```text
+Member 1
+Authentication + Creator Dashboard
+
+Member 2
+Product Management + Pricing
+
+Member 3
+GitHub Integration + Release Management
+
+Member 4
+Marketplace + Customer Library
+
+Member 5
+Orders + Payments + Entitlements
+```
+
+Change assignments according to the actual team.
+
+Each member must have meaningful commits and understand their module for the CA-II evaluation.
 
 ---
 
-# 19. DEVELOPMENT RULES
+# 30. SECURITY
 
-Follow these rules throughout development:
+Implement:
 
-1. Do not build everything at once.
-2. Complete backend foundation before advanced features.
-3. Keep modules separated.
-4. Use PostgreSQL as the source of truth.
-5. Do not use fake data once backend APIs are available.
-6. Do not hard-code secrets.
-7. Validate all important inputs.
-8. Handle errors properly.
-9. Use reusable frontend components.
-10. Keep the GitHub repository organized.
-11. Write documentation while developing.
-12. Keep the system understandable enough for a university viva.
-13. Avoid unnecessary microservices.
-14. Avoid unnecessary AI features.
-15. Do not add features just to make the project look larger.
+* JWT authentication
+* Role-based authorization
+* Product ownership validation
+* GitHub OAuth
+* Secure token handling
+* Input validation
+* Rate limiting where appropriate
+* CORS
+* Environment variables
+* No secrets in GitHub
+* Protected file downloads
+* Proper API error handling
 
----
+Never commit:
 
-# 20. PRIORITY ORDER
+```text
+.env
+GitHub secrets
+Payment secrets
+Database passwords
+JWT secrets
+```
 
-Implement in this order:
+Use:
 
-### Priority 1
-
-Project setup  
-GitHub  
-Backend structure  
-Database  
-Authentication
-
-### Priority 2
-
-User roles  
-Product management  
-Marketplace  
-Search/filter
-
-### Priority 3
-
-Product versions  
-Release management  
-Cloud file handling
-
-### Priority 4
-
-Orders  
-Payments  
-Entitlements  
-Customer library
-
-### Priority 5
-
-Reviews  
-Analytics  
-Notifications  
-Real-time functionality
-
-### Priority 6
-
-Testing  
-Security hardening  
-Deployment  
-Documentation
+```text
+.env.example
+```
 
 ---
 
-# 21. QUALITY REQUIREMENTS
+# 31. END-TO-END CREATOR DEMO
 
-The final application should:
+The final working flow must demonstrate:
 
-- Run without critical errors
-- Have a responsive UI
-- Have working backend APIs
-- Have a connected PostgreSQL database
-- Have authentication
-- Have role-based authorization
-- Have meaningful validation
-- Have proper error handling
-- Have realistic seed data
-- Have clean code structure
-- Have GitHub documentation
-- Have a working creator workflow
-- Have a working customer workflow
+```text
+Creator Login
+     ↓
+Creator Dashboard
+     ↓
+My Products
+     ↓
+Create Product
+     ↓
+Enter Product Information
+     ↓
+Connect GitHub
+     ↓
+Select Repository
+     ↓
+Set Pricing
+     ↓
+Upload Product/Release File
+     ↓
+Create Release
+     ↓
+Publish Product
+     ↓
+Product Appears in Marketplace
+     ↓
+Customer Purchases
+     ↓
+Creator Sees Customer + Order
+     ↓
+Developer Creates New GitHub Release
+     ↓
+ProductForge Syncs Release
+     ↓
+Creator Publishes Update
+     ↓
+Customer Gets New Version
+```
 
-Do not claim a feature is completed unless it actually works.
+This complete workflow is the target.
 
 ---
 
-# 22. FIRST ACTION
+# 32. IMPORTANT IMPLEMENTATION RULE
 
-Before writing the complete frontend:
+Do not create a fake dashboard containing:
 
-1. Analyze the ProductForge requirements.
-2. Create the backend architecture.
-3. Create the database schema.
-4. Create the initial project structure.
-5. Create the requirement and system-design documentation.
-6. Generate **three different Stitch frontend design concepts**.
-7. Present the three designs for selection.
-8. STOP frontend implementation until one design is selected.
-9. After selection, implement that Stitch design in React.
-10. Connect the frontend to the backend APIs.
+```text
+Products: 10
+Sales: 250
+Revenue: ₹50,000
+```
 
-The final goal is a working, GitHub-ready, full-stack ProductForge project that demonstrates **Requirement Analysis + System Design + Backend Engineering + React Frontend + Team Module Development + GitHub Collaboration**.
+unless those values come from the database.
 
-Do not over-engineer the system. Prioritize a working end-to-end product flow over a large number of incomplete features.
+Everything must be real:
+
+```text
+Database
+ ↓
+Backend API
+ ↓
+React
+ ↓
+Creator Dashboard
+```
+
+If the creator has no products, show an empty state.
+
+If the creator creates a product, it must immediately appear in **My Products** after successful API/database creation.
+
+---
+
+# 33. BUILD ORDER
+
+Implement in this exact order:
+
+### Step 1
+
+Inspect the existing ProductForge project.
+
+### Step 2
+
+Do not destroy existing working functionality.
+
+### Step 3
+
+Check current database schema.
+
+### Step 4
+
+Add missing creator/product entities.
+
+### Step 5
+
+Implement creator authentication/ownership middleware.
+
+### Step 6
+
+Implement Product CRUD.
+
+### Step 7
+
+Implement Creator Dashboard.
+
+### Step 8
+
+Implement My Products.
+
+### Step 9
+
+Implement Product Control Center.
+
+### Step 10
+
+Implement Pricing Management.
+
+### Step 11
+
+Implement Product File Management.
+
+### Step 12
+
+Implement Release Management.
+
+### Step 13
+
+Implement GitHub OAuth.
+
+### Step 14
+
+Implement GitHub repository selection.
+
+### Step 15
+
+Implement GitHub release synchronization.
+
+### Step 16
+
+Implement Customers and Orders.
+
+### Step 17
+
+Implement Analytics.
+
+### Step 18
+
+Connect all frontend pages to backend APIs.
+
+### Step 19
+
+Test creator ownership/security.
+
+### Step 20
+
+Update GitHub documentation.
+
+---
+
+# FINAL ACCEPTANCE CRITERIA
+
+The feature is complete only when all of the following work:
+
+* Creator can register/login.
+* Creator can access creator dashboard.
+* Creator can see only their own products.
+* Creator can create a product.
+* Creator can edit a product.
+* Creator can publish/unpublish/archive a product.
+* Creator can set pricing.
+* Creator can upload product/release files.
+* Creator can create releases.
+* Creator can connect GitHub.
+* Creator can select an authorized repository.
+* ProductForge stores the repository association.
+* ProductForge can retrieve GitHub releases.
+* Creator can synchronize GitHub releases.
+* Creator can view customers.
+* Creator can view orders.
+* Creator can view product analytics.
+* Product appears in the marketplace after publication.
+* Customer can purchase the product.
+* Customer receives an entitlement.
+* Creator can see the resulting customer/order.
+* Product release updates can be synchronized.
+* All creator actions are protected by authentication and ownership authorization.
+* Frontend uses the selected Stitch design.
+* Backend APIs are actually connected to the frontend.
+* No sensitive secrets are committed to GitHub.
+* Project documentation is updated.
+* Team members have meaningful GitHub contributions.
+
+Prioritize a **working end-to-end creator workflow** over adding many incomplete features.

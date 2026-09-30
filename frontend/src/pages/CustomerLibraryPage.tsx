@@ -3,7 +3,7 @@ import { api } from '../services/api.js';
 import { Entitlement } from '../types/index.js';
 import { Background3D } from '../components/Background3D.js';
 import { TiltCard } from '../components/TiltCard.js';
-import { Key, Download, Copy, Check, ShieldCheck, Sparkles, Layers, FileCode } from 'lucide-react';
+import { Key, Download, Copy, Check, ShieldCheck, Sparkles, Layers, FileCode, AlertTriangle } from 'lucide-react';
 
 export const CustomerLibraryPage: React.FC = () => {
   const [entitlements, setEntitlements] = useState<Entitlement[]>([]);
@@ -92,7 +92,10 @@ export const CustomerLibraryPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {entitlements.map((ent) => {
               const product = ent.product;
-              const latestVersion = product?.versions && product.versions.length > 0 ? product.versions[0] : null;
+              const latestVersion = product?.versions && product.versions.length > 0 
+                ? (product.versions.find(v => v.isCurrent && !v.isRolledBack) || product.versions.find(v => v.isCurrent) || product.versions[0]) 
+                : null;
+              const rolledBackVersion = product?.versions?.find(v => v.isRolledBack);
 
               return (
                 <TiltCard key={ent.id}>
@@ -141,9 +144,16 @@ export const CustomerLibraryPage: React.FC = () => {
                       {/* Version & Download Files */}
                       {latestVersion && (
                         <div className="space-y-2">
-                          <span className="text-[11px] font-mono text-indigo-400 font-semibold block">
-                            Latest Binary Release: {latestVersion.versionNumber} ({latestVersion.releaseTitle})
-                          </span>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[11px] font-mono text-indigo-400 font-semibold block">
+                              Active Binary Release: {latestVersion.versionNumber} ({latestVersion.releaseTitle})
+                            </span>
+                            {rolledBackVersion && (
+                              <span className="text-[10px] text-amber-300 bg-amber-950/60 border border-amber-500/30 px-2 py-0.5 rounded-full inline-flex items-center gap-1 font-mono">
+                                <AlertTriangle className="w-3 h-3 text-amber-400" /> Stabilized Release
+                              </span>
+                            )}
+                          </div>
 
                           <div className="space-y-1.5">
                             {latestVersion.files && latestVersion.files.length > 0 ? (

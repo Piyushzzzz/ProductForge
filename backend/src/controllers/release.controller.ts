@@ -52,4 +52,59 @@ export class ReleaseController {
       next(error);
     }
   }
+
+  static async compare(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const productId = req.params.id as string;
+      const {
+        baseVersionId,
+        targetVersionId,
+        newVersionNumber,
+        newReleaseTitle,
+        newReleaseNotes,
+        newFileSize,
+        newFileName
+      } = { ...req.query, ...req.body };
+
+      const comparison = await ReleaseService.compareVersions(productId, {
+        baseVersionId: baseVersionId as string,
+        targetVersionId: targetVersionId as string,
+        newVersionNumber: newVersionNumber as string,
+        newReleaseTitle: newReleaseTitle as string,
+        newReleaseNotes: newReleaseNotes as string,
+        newFileSize: newFileSize ? Number(newFileSize) : undefined,
+        newFileName: newFileName as string
+      });
+
+      ApiResponse.success(res, comparison);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async rollback(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) return ApiResponse.error(res, 'Unauthorized', 401);
+      const productId = req.params.id as string;
+      const { targetVersionId, reason } = req.body;
+
+      if (!targetVersionId) {
+        ApiResponse.error(res, 'targetVersionId is required to execute a rollback.', 400);
+        return;
+      }
+
+      const isAdmin = req.user.role === 'ADMIN';
+      const result = await ReleaseService.rollbackRelease(
+        productId,
+        targetVersionId,
+        reason,
+        req.user.userId,
+        isAdmin
+      );
+
+      ApiResponse.success(res, result, result.message);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
